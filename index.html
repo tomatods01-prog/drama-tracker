@@ -3498,6 +3498,129 @@
         border-radius: 4px;
       }
     }
+
+    /* v3 iPhone card polish */
+    @media (max-width: 600px) {
+      .list {
+        padding: 6px 14px 8px;
+        overflow: hidden;
+      }
+
+      .drama,
+      .drama:hover,
+      .drama:focus-within,
+      .drama.archived:hover,
+      .drama.archived:focus-within,
+      .drama.completed:hover,
+      .drama.completed:focus-within {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+        width: 100%;
+        margin: 0;
+        padding: 18px 2px 20px;
+        box-shadow: none;
+      }
+
+      .drama-main {
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 12px;
+        width: 100%;
+        align-items: start;
+      }
+
+      .index-mark {
+        position: static;
+        width: 42px;
+        height: 42px;
+        margin: 0;
+        border-radius: 8px;
+        transform: none;
+      }
+
+      .name {
+        font-size: clamp(20px, 5.3vw, 23px);
+        line-height: 1.22;
+      }
+
+      .row-meta {
+        gap: 7px 10px;
+        margin-top: 7px;
+      }
+
+      .episode-stack {
+        display: grid;
+        width: 100%;
+        gap: 7px;
+      }
+
+      .episode-label {
+        display: block;
+        margin: 0;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+      }
+
+      .episode-controls {
+        width: 100%;
+        min-height: 44px;
+        border-radius: 8px;
+      }
+
+      .episode-button {
+        flex: 0 0 52px;
+        min-width: 52px;
+        min-height: 44px;
+      }
+
+      .episode-input {
+        min-width: 0;
+        min-height: 44px;
+        font-size: 18px;
+      }
+
+      .actions {
+        display: flex;
+        grid-column: 1 / -1;
+        align-items: stretch;
+        gap: 8px;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .small,
+      .small:first-child,
+      .small + .small,
+      .small:only-child {
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 44px;
+        padding: 0 8px;
+        border: 1px solid var(--v3-line-strong);
+        border-radius: 8px;
+        background: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .small.archive {
+        border-color: #fedf89;
+        background: var(--v3-amber-soft);
+      }
+
+      .small.complete {
+        border-color: #abefc6;
+        background: var(--v3-green-soft);
+      }
+
+      .small.delete {
+        border-color: #fecdca;
+        background: var(--v3-red-soft);
+      }
+    }
   </style>
 </head>
 <body>
