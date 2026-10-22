@@ -1,4076 +1,486 @@
 <!doctype html>
-<html lang="zh-Hans">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Drama Tracker v3</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7fb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Drama Tracker">
+  <meta name="description" content="Your dramas, your pace. Track episodes and keep a backup of your library.">
+  <title>Drama Tracker v4</title>
   <style>
-    :root {
-      --bg: #f6f7fb;
-      --surface: #ffffff;
-      --panel: #ffffff;
-      --ink: #111318;
-      --muted: #6b7280;
-      --subtle: #9ca3af;
-      --line: #e5e7eb;
-      --line-strong: #d1d5db;
-      --accent: #e2553f;
-      --accent-soft: #fff0ec;
-      --accent-ink: #9f2f1c;
-      --focus: #2563eb;
-      --focus-soft: #eff6ff;
-      --good: #16805a;
-      --good-soft: #eaf8f1;
-      --warn: #b56a00;
-      --warn-soft: #fff7e6;
-      --danger: #b42318;
-      --danger-soft: #fff1f0;
-      --shadow: 0 24px 70px rgba(17, 24, 39, 0.12);
-      --soft-shadow: 0 12px 32px rgba(17, 24, 39, 0.07);
+    :root { color-scheme: light; --bg:#f6f7fb; --paper:#fff; --ink:#17212f; --muted:#657083; --line:#e4e8ef; --accent:#df583f; --accent-soft:#fff0ec; --blue:#2563eb; --blue-soft:#edf3ff; --green:#147b56; --green-soft:#ebf8f1; --amber:#986208; --amber-soft:#fff7e7; --red:#b42318; --shadow:0 10px 36px #17212f08; }
+    :root[data-theme="dark"] { color-scheme:dark; --bg:#121820; --paper:#1b2430; --ink:#f1f4f8; --muted:#a4b0c2; --line:#344050; --accent:#ff9a81; --accent-soft:#392a28; --blue:#9bbaff; --blue-soft:#25344e; --green:#89dcb5; --green-soft:#233b32; --amber:#efd08a; --amber-soft:#3b3425; --red:#ffaaa0; --shadow:0 10px 36px #0002; }
+    @media(prefers-color-scheme:dark) { :root:not([data-theme="light"]) { color-scheme:dark; --bg:#121820; --paper:#1b2430; --ink:#f1f4f8; --muted:#a4b0c2; --line:#344050; --accent:#ff9a81; --accent-soft:#392a28; --blue:#9bbaff; --blue-soft:#25344e; --green:#89dcb5; --green-soft:#233b32; --amber:#efd08a; --amber-soft:#3b3425; --red:#ffaaa0; --shadow:0 10px 36px #0002; } }
+    * { box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; line-height:1.5; -webkit-text-size-adjust:100%; }
+    button,input,select,textarea { font:inherit; }
+    button,select,a { -webkit-tap-highlight-color:transparent; }
+    button { cursor:pointer; }
+    button,input,select,textarea { border:1px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); }
+    button { min-height:44px; padding:9px 14px; font-size:13px; font-weight:650; touch-action:manipulation; }
+    button:hover { border-color:var(--muted); }
+    button:active { transform:translateY(1px); }
+    button:disabled { opacity:.4; cursor:default; transform:none; }
+    input,select,textarea { min-height:46px; padding:10px 12px; min-width:0; width:100%; font-size:16px; }
+    textarea { resize:vertical; }
+    :focus-visible { outline:3px solid var(--blue); outline-offset:3px; }
+    a { color:var(--blue); text-underline-offset:3px; }
+    h1,h2,p { margin:0; }
+    .app { max-width:1160px; margin:auto; padding:36px max(24px,env(safe-area-inset-right)) max(32px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; margin-bottom:28px; }
+    .eyebrow { color:var(--accent); font-size:11px; font-weight:800; letter-spacing:.14em; margin-bottom:8px; }
+    h1 { font-size:clamp(28px,4vw,38px); letter-spacing:-.04em; line-height:1.2; }
+    .version { display:inline-block; vertical-align:middle; margin-left:8px; padding:3px 7px; border:1px solid var(--line); border-radius:6px; font-size:11px; letter-spacing:0; color:var(--muted); }
+    .subtitle { color:var(--muted); font-size:14px; margin-top:9px; }
+    .header-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; padding-top:5px; }
+    .save-status { width:100%; text-align:right; color:var(--green); font-size:12px; }
+    .save-status.error { color:var(--red); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+    .stat { border:1px solid var(--line); border-radius:14px; padding:16px 20px; background:var(--paper); box-shadow:var(--shadow); }
+    .stat strong { font-size:26px; line-height:1.2; display:block; font-variant-numeric:tabular-nums; letter-spacing:-.04em; }
+    .stat span { color:var(--muted); font-size:12px; }
+    .stat.watching strong { color:var(--blue); } .stat.completed strong { color:var(--green); }
+    .workspace { background:var(--paper); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:clip; }
+    .toolbar { padding:18px 22px; border-bottom:1px solid var(--line); }
+    .tabs { display:flex; gap:5px; padding:4px; background:var(--bg); border-radius:12px; width:max-content; max-width:100%; margin-bottom:18px; }
+    .tab { background:transparent; border:1px solid transparent; color:var(--muted); padding:9px 14px; white-space:nowrap; }
+    .tab.active { background:var(--paper); border-color:var(--line); color:var(--ink); box-shadow:0 2px 5px #17212f06; }
+    .count { font-size:11px; margin-left:5px; background:var(--line); border-radius:5px; padding:2px 5px; font-variant-numeric:tabular-nums; }
+    .add-form { display:flex; gap:8px; }
+    .primary { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+    .primary:hover { opacity:.9; }
+    .tools { display:grid; grid-template-columns:minmax(180px,1fr) 170px auto; gap:10px; align-items:center; margin-top:12px; }
+    .result-info { color:var(--muted); font-size:12px; margin-top:12px; min-height:18px; }
+    .list { padding:0 22px; outline-offset:-3px; }
+    .drama { display:grid; grid-template-columns:42px minmax(0,1fr) 176px; gap:18px; padding:24px 0; border-bottom:1px solid var(--line); align-items:start; }
+    .drama:last-child { border-bottom:0; }
+    .order { display:grid; gap:4px; justify-items:center; padding-top:2px; }
+    .index { color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; font-weight:650; }
+    .order-buttons { display:flex; flex-direction:column; gap:4px; }
+    .order-buttons button { width:34px; padding:0; min-height:32px; color:var(--muted); }
+    .name { font-size:19px; font-weight:720; line-height:1.4; letter-spacing:-.025em; overflow-wrap:anywhere; }
+    .row-meta { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:7px; color:var(--muted); font-size:11px; }
+    .badge { padding:3px 7px; border-radius:5px; color:var(--blue); background:var(--blue-soft); font-weight:650; }
+    .archived .badge { color:var(--amber); background:var(--amber-soft); }
+    .completed .badge { color:var(--green); background:var(--green-soft); }
+    .notes { font-size:13px; color:var(--muted); margin-top:10px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .watch-link { display:inline-block; margin-top:8px; font-size:12px; }
+    .actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:13px; }
+    .actions button { min-height:36px; padding:6px 10px; font-size:12px; }
+    .actions .complete { color:var(--green); } .actions .archive { color:var(--amber); } .actions .delete { color:var(--red); }
+    .episode-label { display:block; color:var(--muted); font-size:11px; text-align:center; margin-bottom:7px; }
+    .episode-controls { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; border:1px solid var(--line); border-radius:11px; overflow:hidden; }
+    .episode-controls button { border:0; border-radius:0; font-size:20px; padding:4px; min-height:46px; background:var(--bg); }
+    .episode-controls input { text-align:center; border:0; border-radius:0; padding:6px 0; width:100%; appearance:textfield; font-weight:700; font-variant-numeric:tabular-nums; }
+    input::-webkit-inner-spin-button,input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    .episode-controls :focus-visible { outline-offset:-3px; }
+    .progress-info { text-align:center; color:var(--muted); font-size:11px; margin-top:7px; font-variant-numeric:tabular-nums; }
+    progress { display:block; width:100%; height:5px; margin-top:9px; border:0; border-radius:9px; accent-color:var(--blue); overflow:hidden; background:var(--line); }
+    progress::-webkit-progress-bar { background:var(--line); } progress::-webkit-progress-value { background:var(--blue); border-radius:9px; }
+    .dragging { opacity:.5; } .drag-over { box-shadow:inset 0 3px var(--blue); }
+    .empty { padding:48px 20px; text-align:center; color:var(--muted); font-size:14px; }
+    .empty strong { display:block; color:var(--ink); font-size:20px; margin-bottom:8px; }
+    .notice { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border:1px solid var(--line); border-radius:12px; background:var(--paper); margin-bottom:16px; font-size:13px; overflow-wrap:anywhere; }
+    .recovery { border-color:var(--red); color:var(--red); align-items:flex-start; }
+    .recovery p { margin-bottom:8px; }
+    .footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; color:var(--muted); font-size:12px; padding:20px 2px 0; }
+    .footer button { border:0; background:transparent; padding:0; min-height:24px; font-size:12px; color:var(--muted); }
+    dialog { color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:24px; width:min(500px,calc(100% - 28px)); max-height:85dvh; overflow:auto; box-shadow:0 30px 100px #0004; }
+    dialog::backdrop { background:#10182680; backdrop-filter:blur(3px); }
+    dialog h2 { font-size:23px; letter-spacing:-.03em; margin-bottom:5px; }
+    .dialog-description { color:var(--muted); font-size:13px; margin-bottom:18px; }
+    .field { display:block; font-size:12px; font-weight:650; margin-top:14px; }
+    .field input,.field select,.field textarea { margin-top:6px; font-weight:400; }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .dialog-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:22px; }
+    .form-error { font-size:13px; color:var(--red); margin-top:12px; }
+    .toast { position:fixed; bottom:max(20px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); z-index:10; width:max-content; max-width:calc(100% - 32px); border:1px solid var(--line); border-radius:12px; background:var(--ink); color:var(--paper); padding:12px 18px; font-size:13px; box-shadow:var(--shadow); pointer-events:none; }
+    .help-text { font-size:14px; color:var(--muted); } .help-text p { margin-top:14px; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media(max-width:700px) {
+      .app { padding-top:max(24px,env(safe-area-inset-top)); padding-left:max(16px,env(safe-area-inset-left)); padding-right:max(16px,env(safe-area-inset-right)); }
+      .header { display:block; margin-bottom:20px; } .header-actions { justify-content:flex-start; margin-top:16px; } .save-status { text-align:left; margin-top:3px; }
+      .stats { gap:8px; margin-bottom:16px; } .stat { padding:12px; border-radius:12px; } .stat strong { font-size:23px; } .stat span { font-size:10px; }
+      .toolbar { padding:14px; } .tabs { width:100%; gap:2px; } .tab { flex:1; font-size:12px; padding:9px 4px; } .count { margin-left:3px; padding:2px 4px; }
+      .tools { grid-template-columns:minmax(0,1fr) 135px; } .clear-search { display:none; }
+      .list { padding:0 14px; } .drama { grid-template-columns:36px minmax(0,1fr); gap:8px 12px; padding:20px 0; }
+      .order { grid-column:1; grid-row:1; } .order-buttons { gap:5px; } .order-buttons button { min-height:44px; width:36px; }
+      .details { grid-column:2; grid-row:1; } .name { font-size:19px; }
+      .episode-stack { grid-column:2; width:100%; margin-top:5px; } .episode-label { text-align:left; } .episode-controls { grid-template-columns:52px minmax(0,1fr) 52px; }
+      .episode-controls button { min-height:48px; } .actions { gap:6px; } .actions button { min-height:44px; padding:7px 10px; }
+      .footer { display:block; } .footer button { margin-top:10px; } .subtitle { max-width:310px; }
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Inter, "Segoe UI", Arial, Helvetica, sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 12% -10%, rgba(226, 85, 63, 0.16), transparent 30rem),
-        radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.12), transparent 26rem),
-        linear-gradient(180deg, #fbfcff 0%, var(--bg) 48%, #eef1f7 100%);
-    }
-
-    .app {
-      width: min(1180px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0 44px;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      padding: 28px;
-      margin-bottom: 18px;
-      background:
-        linear-gradient(135deg, rgba(17, 19, 24, 0.98) 0%, rgba(40, 44, 56, 0.96) 68%, rgba(226, 85, 63, 0.88) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      color: #ffffff;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(30px, 4vw, 46px);
-      line-height: 1.15;
-      letter-spacing: 0;
-    }
-
-    .eyebrow {
-      margin-bottom: 8px;
-      color: #ffb199;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .subtitle {
-      max-width: 580px;
-      margin-top: 8px;
-      color: #d9dde7;
-      font-size: 15px;
-      line-height: 1.45;
-    }
-
-    .header-side {
-      display: grid;
-      justify-items: end;
-      gap: 8px;
-    }
-
-    .total-pill {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 8px;
-      padding: 10px 13px;
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-      font-size: 13px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .total-pill strong {
-      font-size: 20px;
-    }
-
-    .save-status {
-      color: #d9dde7;
-      font-size: 14px;
-      white-space: nowrap;
-    }
-
-    .tracker-shell {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 300px;
-      gap: 18px;
-      align-items: start;
-    }
-
-    .main-column,
-    .side-column {
-      display: grid;
-      gap: 14px;
-    }
-
-    .workspace-card {
-      display: grid;
-      gap: 14px;
-      padding: 14px;
-      background: rgba(255, 255, 255, 0.74);
-      border: 1px solid rgba(229, 231, 235, 0.9);
-      border-radius: 18px;
-      box-shadow: var(--soft-shadow);
-      backdrop-filter: blur(14px);
-    }
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .library-toolbar {
-      display: grid;
-      grid-template-columns: auto minmax(120px, 1fr) minmax(360px, 560px);
-      align-items: center;
-      gap: 16px;
-    }
-
-    .drag-note {
-      justify-self: end;
-      color: #8c8c8c;
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .add-panel {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 10px;
-      padding: 10px;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      box-shadow: none;
-    }
-
-    input {
-      width: 100%;
-      min-height: 48px;
-      padding: 0 14px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      color: var(--ink);
-      font-size: 16px;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: var(--focus);
-      box-shadow: 0 0 0 4px var(--focus-soft);
-    }
-
-    button {
-      min-height: 40px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #ffffff;
-      color: var(--ink);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    button:hover {
-      border-color: var(--line-strong);
-      background: #faf8f5;
-    }
-
-    .primary {
-      min-width: 120px;
-      border-color: var(--accent);
-      background: var(--accent);
-      color: #ffffff;
-    }
-
-    .primary:hover {
-      background: #7f2a19;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      padding: 6px;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      overflow-x: auto;
-      box-shadow: none;
-    }
-
-    .tab {
-      min-width: 128px;
-      border-color: transparent;
-      padding: 0 16px;
-      color: var(--muted);
-      background: transparent;
-    }
-
-    .tab.active {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-      color: var(--accent-ink);
-      box-shadow: 0 6px 18px rgba(226, 85, 63, 0.12);
-    }
-
-    .tab-count {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 22px;
-      min-height: 22px;
-      padding: 0 6px;
-      margin-left: 7px;
-      border-radius: 999px;
-      background: rgba(37, 33, 29, 0.08);
-      font-size: 12px;
-    }
-
-    .summary {
-      display: grid;
-      gap: 10px;
-    }
-
-    .summary-item {
-      position: relative;
-      overflow: hidden;
-      padding: 16px;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      box-shadow: var(--soft-shadow);
-    }
-
-    .summary-item::before {
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 4px;
-      background: var(--accent);
-      content: "";
-    }
-
-    .summary-item:nth-child(2)::before {
-      background: var(--warn);
-    }
-
-    .summary-item:nth-child(3)::before {
-      background: var(--good);
-    }
-
-    .summary-number {
-      display: block;
-      margin-bottom: 4px;
-      font-size: 30px;
-      font-weight: 800;
-    }
-
-    .summary-label {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .list {
-      display: grid;
-      gap: 14px;
-    }
-
-    .drama {
-      position: relative;
-      display: grid;
-      grid-template-columns: 38px minmax(220px, 1fr) auto auto;
-      align-items: center;
-      gap: 18px;
-      overflow: hidden;
-      padding: 18px;
-      background:
-        linear-gradient(90deg, rgba(226, 85, 63, 0.08), transparent 42%),
-        var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: var(--soft-shadow);
-      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-    }
-
-    .drama::before {
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 4px;
-      background: linear-gradient(180deg, var(--accent), #f59e0b);
-      content: "";
-    }
-
-    .drama.dragging {
-      opacity: 0.55;
-      transform: scale(0.99);
-    }
-
-    .drama.drag-over {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-soft), var(--soft-shadow);
-    }
-
-    .drama:hover {
-      border-color: var(--line-strong);
-      box-shadow: 0 22px 42px rgba(17, 24, 39, 0.11);
-      transform: translateY(-1px);
-    }
-
-    .drag-handle {
-      display: grid;
-      width: 38px;
-      height: 44px;
-      place-items: center;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.78);
-      color: var(--subtle);
-      cursor: grab;
-      font-size: 20px;
-      font-weight: 800;
-      line-height: 1;
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .drag-handle:active {
-      cursor: grabbing;
-    }
-
-    .drama-main {
-      display: grid;
-      grid-template-columns: 42px minmax(0, 1fr);
-      align-items: center;
-      gap: 15px;
-      min-width: 0;
-    }
-
-    .index-mark {
-      display: grid;
-      width: 42px;
-      height: 42px;
-      place-items: center;
-      border: 1px solid rgba(226, 85, 63, 0.18);
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent-ink);
-      font-size: 14px;
-      font-weight: 900;
-    }
-
-    .name {
-      min-width: 0;
-      font-size: clamp(24px, 2.4vw, 34px);
-      font-weight: 900;
-      line-height: 1.08;
-      letter-spacing: 0;
-      overflow-wrap: anywhere;
-    }
-
-    .meta {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 400;
-    }
-
-    .row-meta {
-      display: inline-flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 5px 9px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent-ink);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .status-pill.archived,
-    .archive {
-      background: var(--warn-soft);
-      color: var(--warn);
-    }
-
-    .status-pill.completed,
-    .complete {
-      background: var(--good-soft);
-      color: var(--good);
-    }
-
-    .episode-label {
-      color: var(--subtle);
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      white-space: nowrap;
-    }
-
-    .episode-stack {
-      display: grid;
-      gap: 7px;
-      justify-items: center;
-    }
-
-    .episode-controls {
-      display: grid;
-      grid-template-columns: 38px 96px 38px;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .episode-button {
-      width: 38px;
-      min-width: 38px;
-      padding: 0;
-      border-radius: 10px;
-      font-size: 20px;
-      line-height: 1;
-    }
-
-    .episode-button:hover {
-      color: var(--accent);
-    }
-
-    .episode-input {
-      width: 96px;
-      min-height: 40px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #ffffff;
-      color: var(--ink);
-      font-size: 16px;
-      font-weight: 800;
-      text-align: center;
-    }
-
-    .episode-input::-webkit-outer-spin-button,
-    .episode-input::-webkit-inner-spin-button {
-      margin: 0;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .small {
-      min-height: 36px;
-      padding: 0 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    .archive,
-    .complete,
-    .delete {
-      border-color: transparent;
-    }
-
-    .delete {
-      background: var(--danger-soft);
-      color: var(--danger);
-    }
-
-    .delete:hover {
-      border-color: #ffc9c5;
-      background: #ffe6e3;
-    }
-
-    .empty {
-      padding: 42px 22px;
-      background: var(--surface);
-      border: 1px dashed var(--line-strong);
-      border-radius: 14px;
-      color: var(--muted);
-      text-align: center;
-      box-shadow: var(--soft-shadow);
-    }
-
-    .empty strong {
-      display: block;
-      margin-bottom: 6px;
-      color: var(--ink);
-      font-size: 18px;
-    }
-
-    @media (max-width: 760px) {
-      .app {
-        width: min(100% - 20px, 1120px);
-        padding-top: 20px;
-      }
-
-      header {
-        display: block;
-        padding: 20px;
-      }
-
-      h1 {
-        font-size: 28px;
-        margin-bottom: 8px;
-      }
-
-      .header-side {
-        justify-items: start;
-        margin-top: 14px;
-      }
-
-      .add-panel,
-      .drama {
-        grid-template-columns: 1fr;
-      }
-
-      .drag-handle {
-        width: 100%;
-        height: 42px;
-      }
-
-      .tracker-shell {
-        grid-template-columns: 1fr;
-      }
-
-      .side-column {
-        order: -1;
-      }
-
-      .summary {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .summary-item {
-        padding: 13px 12px;
-      }
-
-      .summary-number {
-        font-size: 24px;
-      }
-
-      .tabs {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-      }
-
-      .tab {
-        min-width: max-content;
-        flex: 1 0 auto;
-      }
-
-      .episode-controls {
-        width: 100%;
-        grid-template-columns: 44px minmax(0, 1fr) 44px;
-      }
-
-      .episode-stack {
-        justify-items: stretch;
-      }
-
-      .episode-button {
-        width: 44px;
-        min-width: 44px;
-        min-height: 44px;
-      }
-
-      .episode-input {
-        width: 100%;
-      }
-
-      .actions {
-        justify-content: flex-start;
-      }
-
-      .name {
-        font-size: clamp(28px, 8vw, 38px);
-      }
-    }
-
-    @media (max-width: 520px) {
-      .app {
-        width: min(100% - 16px, 1120px);
-      }
-
-      header {
-        border-radius: 18px;
-      }
-
-      h1 {
-        font-size: 34px;
-      }
-
-      .add-panel,
-      .summary {
-        grid-template-columns: 1fr;
-      }
-
-      .tabs {
-        gap: 6px;
-      }
-
-      .tab {
-        min-width: 0;
-        padding: 0 10px;
-        font-size: 13px;
-      }
-
-      .tab-count {
-        margin-left: 4px;
-      }
-
-      .drama {
-        padding: 16px;
-        border-radius: 18px;
-      }
-
-      .primary {
-        width: 100%;
-      }
-
-      .actions {
-        display: grid;
-        grid-template-columns: 1fr;
-      }
-
-      .small {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 980px) and (min-width: 761px) {
-      .drama {
-        grid-template-columns: 38px minmax(0, 1fr);
-      }
-
-      .episode-stack,
-      .actions {
-        grid-column: 2;
-        justify-self: start;
-      }
-    }
-
-    /* Ant Design Pro inspired desktop shell */
-    body {
-      background: #f5f5f5;
-    }
-
-    .app-frame {
-      min-height: 100vh;
-    }
-
-    .app-content {
-      min-width: 0;
-    }
-
-    .app {
-      width: auto;
-      max-width: none;
-      padding: 30px 40px 44px;
-    }
-
-    header {
-      align-items: center;
-      padding: 24px 28px;
-      margin-bottom: 24px;
-      background: #ffffff;
-      border: 1px solid #f0f0f0;
-      border-radius: 8px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-      color: #202124;
-    }
-
-    h1 {
-      margin-top: 0;
-      color: #202124;
-      font-size: 22px;
-      font-weight: 800;
-    }
-
-    .eyebrow {
-      margin: 0;
-      color: #8c8c8c;
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: 0;
-      text-transform: none;
-    }
-
-    .subtitle {
-      display: block;
-      max-width: 620px;
-      color: #8c8c8c;
-      font-size: 14px;
-    }
-
-    .total-pill {
-      border: 1px solid #f0f0f0;
-      background: #fafafa;
-      color: #202124;
-    }
-
-    .save-status {
-      color: #8c8c8c;
-    }
-
-    .tracker-shell {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 24px;
-    }
-
-    .side-column {
-      order: -1;
-    }
-
-    .summary {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0;
-      overflow: hidden;
-      background: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    }
-
-    .summary-item {
-      padding: 25px 32px;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-      text-align: center;
-    }
-
-    .summary-item + .summary-item {
-      border-left: 1px solid #f0f0f0;
-    }
-
-    .summary-item::before {
-      display: none;
-    }
-
-    .summary-number {
-      margin: 6px 0 0;
-      font-size: 28px;
-      font-weight: 500;
-    }
-
-    .summary-label {
-      display: block;
-      color: #666666;
-      font-size: 14px;
-    }
-
-    .workspace-card {
-      gap: 16px;
-      padding: 24px;
-      background: #ffffff;
-      border: 0;
-      border-radius: 8px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-      backdrop-filter: none;
-    }
-
-    .section-title {
-      color: #202124;
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: 0;
-      text-transform: none;
-    }
-
-    .section-title span:last-child {
-      color: #8c8c8c;
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .add-panel {
-      grid-template-columns: minmax(280px, 1fr) 108px;
-      max-width: 560px;
-      width: 100%;
-      justify-self: stretch;
-      padding: 0;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-    }
-
-    input {
-      min-height: 36px;
-      border-color: #d9d9d9;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    button {
-      min-height: 36px;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .primary {
-      min-width: 0;
-      border-color: #1677ff;
-      background: #1677ff;
-    }
-
-    .primary:hover {
-      background: #0958d9;
-    }
-
-    .tabs {
-      justify-self: start;
-      padding: 0;
-      border: 0;
-      border-radius: 4px;
-      background: #f5f5f5;
-      box-shadow: none;
-    }
-
-    .tab {
-      min-width: 88px;
-      min-height: 32px;
-      padding: 0 12px;
-      border-radius: 4px;
-      color: #595959;
-      font-size: 14px;
-    }
-
-    .tab.active {
-      border-color: #1677ff;
-      background: #ffffff;
-      color: #1677ff;
-      box-shadow: none;
-    }
-
-    .tab-count {
-      min-width: 18px;
-      min-height: 18px;
-      background: transparent;
-      font-size: 12px;
-    }
-
-    .list {
-      gap: 0;
-      margin-top: 8px;
-    }
-
-    .drama {
-      grid-template-columns: 38px minmax(420px, 1fr) 210px 300px;
-      gap: 18px;
-      padding: 18px 0;
-      background: #ffffff;
-      border: 0;
-      border-bottom: 1px solid #f0f0f0;
-      border-radius: 0;
-      box-shadow: none;
-      overflow: visible;
-    }
-
-    .drama::before {
-      display: none;
-    }
-
-    .drama:hover {
-      background: #fafafa;
-      box-shadow: none;
-      transform: none;
-    }
-
-    .drag-handle {
-      width: 30px;
-      height: 46px;
-      border: 0;
-      background: transparent;
-      color: #bfbfbf;
-      font-size: 18px;
-    }
-
-    .drama-main {
-      grid-template-columns: 48px minmax(0, 1fr);
-      gap: 16px;
-    }
-
-    .index-mark {
-      width: 48px;
-      height: 48px;
-      border: 0;
-      border-radius: 8px;
-      background: #e6f4ff;
-      color: #1677ff;
-      font-size: 15px;
-    }
-
-    .name {
-      font-size: 20px;
-      line-height: 1.25;
-      font-weight: 800;
-    }
-
-    .row-meta {
-      margin-top: 8px;
-    }
-
-    .status-pill {
-      padding: 0;
-      background: transparent;
-      color: #8c8c8c;
-      font-size: 13px;
-      letter-spacing: 0;
-      text-transform: none;
-    }
-
-    .status-pill.watching {
-      color: #1677ff;
-    }
-
-    .status-pill.archived {
-      color: #faad14;
-    }
-
-    .status-pill.completed {
-      color: #52c41a;
-    }
-
-    .meta {
-      color: #8c8c8c;
-      font-size: 13px;
-    }
-
-    .episode-stack {
-      justify-items: start;
-    }
-
-    .episode-label {
-      color: #595959;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0;
-      text-transform: none;
-    }
-
-    .episode-controls {
-      grid-template-columns: 32px 80px 32px;
-    }
-
-    .episode-button,
-    .episode-input {
-      min-height: 32px;
-      border-radius: 4px;
-      background: #ffffff;
-    }
-
-    .episode-button {
-      width: 32px;
-      min-width: 32px;
-      color: #595959;
-      font-size: 16px;
-    }
-
-    .episode-input {
-      width: 80px;
-      font-size: 14px;
-    }
-
-    .actions {
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    .small {
-      min-height: 30px;
-      padding: 0 6px;
-      border: 0;
-      border-radius: 4px;
-      background: transparent;
-      color: #1677ff;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .archive,
-    .complete {
-      background: transparent;
-      color: #1677ff;
-    }
-
-    .delete {
-      background: transparent;
-      color: #ff4d4f;
-    }
-
-    .delete:hover,
-    .small:hover {
-      background: #f5f5f5;
-    }
-
-    @media (max-width: 1060px) {
-      .app {
-        padding: 24px;
-      }
-
-      .drama {
-        grid-template-columns: 34px minmax(0, 1fr);
-      }
-
-      .episode-stack,
-      .actions {
-        grid-column: 2;
-        justify-self: start;
-      }
-
-      .summary {
-        grid-template-columns: 1fr;
-      }
-
-      .summary-item + .summary-item {
-        border-left: 0;
-        border-top: 1px solid #f0f0f0;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .app {
-        padding: 16px;
-      }
-
-      header {
-        display: block;
-      }
-
-      .header-side {
-        justify-items: start;
-        margin-top: 12px;
-      }
-
-      .workspace-card {
-        padding: 16px;
-      }
-
-      .section-title {
-        display: grid;
-      }
-
-      .library-toolbar {
-        grid-template-columns: 1fr;
-      }
-
-      .drag-note {
-        justify-self: start;
-      }
-
-      .add-panel,
-      .tabs,
-      .drama {
-        justify-self: stretch;
-      }
-
-      .add-panel,
-      .drama {
-        grid-template-columns: 1fr;
-      }
-
-      .drag-handle {
-        width: 100%;
-        height: 32px;
-      }
-
-      .drama-main {
-        grid-template-columns: 42px minmax(0, 1fr);
-      }
-
-      .name {
-        font-size: 24px;
-      }
-
-      .episode-stack,
-      .actions {
-        grid-column: auto;
-      }
-
-      .episode-controls {
-        width: 100%;
-        grid-template-columns: 36px minmax(0, 1fr) 36px;
-      }
-
-      .episode-input {
-        width: 100%;
-      }
-    }
-
-    /* v2 polished desktop workspace */
-    :root {
-      --v2-bg: #f4f6f8;
-      --v2-surface: #ffffff;
-      --v2-ink: #151922;
-      --v2-muted: #687080;
-      --v2-subtle: #9299a6;
-      --v2-line: #e6e9ee;
-      --v2-line-strong: #d7dce3;
-      --v2-accent: #2563eb;
-      --v2-accent-hover: #1d4ed8;
-      --v2-accent-soft: #eef4ff;
-      --v2-archived: #a16207;
-      --v2-archived-soft: #fff8e8;
-      --v2-completed: #08775a;
-      --v2-completed-soft: #ecfdf5;
-      --v2-danger: #c42b32;
-      --v2-danger-soft: #fff1f2;
-      --v2-shadow: 0 8px 24px rgba(18, 28, 45, 0.06);
-    }
-
-    body {
-      min-width: 760px;
-      background: var(--v2-bg);
-      color: var(--v2-ink);
-      font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
-    }
-
-    .app-frame {
-      min-height: 100vh;
-      background: var(--v2-bg);
-    }
-
-    .app {
-      width: min(1480px, calc(100% - 64px));
-      margin: 0 auto;
-      padding: 36px 0 56px;
-    }
-
-    header {
-      min-height: 88px;
-      margin: 0 0 20px;
-      padding: 0 2px;
-      background: transparent;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    header > div:first-child {
-      min-width: 0;
-    }
-
-    h1 {
-      color: var(--v2-ink);
-      font-size: 32px;
-      font-weight: 750;
-      line-height: 1.2;
-    }
-
-    .subtitle {
-      max-width: none;
-      margin-top: 8px;
-      color: var(--v2-muted);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .header-side {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .total-pill {
-      min-height: 42px;
-      padding: 0 16px;
-      border: 1px solid var(--v2-line);
-      border-radius: 6px;
-      background: var(--v2-surface);
-      color: var(--v2-ink);
-      box-shadow: 0 1px 2px rgba(18, 28, 45, 0.04);
-    }
-
-    .total-pill strong {
-      color: var(--v2-accent);
-      font-size: 22px;
-    }
-
-    .save-status {
-      color: var(--v2-muted);
-      font-size: 13px;
-    }
-
-    .tracker-shell {
-      gap: 18px;
-    }
-
-    .summary {
-      min-height: 108px;
-      border: 1px solid var(--v2-line);
-      border-radius: 8px;
-      box-shadow: var(--v2-shadow);
-    }
-
-    .summary-item {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      grid-template-rows: auto auto;
-      column-gap: 14px;
-      align-content: center;
-      padding: 22px 30px;
-      text-align: left;
-    }
-
-    .summary-item + .summary-item {
-      border-color: var(--v2-line);
-    }
-
-    .summary-number {
-      grid-row: 1 / span 2;
-      align-self: center;
-      min-width: 54px;
-      margin: 0;
-      color: var(--v2-ink);
-      font-size: 34px;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .summary-label {
-      align-self: center;
-      color: var(--v2-muted);
-      font-size: 14px;
-      line-height: 1.35;
-    }
-
-    .summary-label::before {
-      display: block;
-      margin-bottom: 4px;
-      color: var(--v2-subtle);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      content: "Status";
-    }
-
-    .workspace-card {
-      gap: 0;
-      padding: 0;
-      overflow: hidden;
-      border: 1px solid var(--v2-line);
-      border-radius: 8px;
-      background: var(--v2-surface);
-      box-shadow: var(--v2-shadow);
-    }
-
-    .library-toolbar {
-      display: grid;
-      grid-template-columns: auto 1fr minmax(430px, 560px);
-      align-items: center;
-      gap: 18px;
-      min-height: 76px;
-      padding: 16px 22px;
-      border-bottom: 1px solid var(--v2-line);
-      background: #ffffff;
-    }
-
-    .drag-note {
-      justify-self: start;
-      color: var(--v2-subtle);
-      font-size: 12px;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 2px;
-      padding: 3px;
-      border: 1px solid var(--v2-line);
-      border-radius: 6px;
-      background: #f7f8fa;
-    }
-
-    .tab {
-      min-width: 104px;
-      min-height: 36px;
-      padding: 0 14px;
-      border: 0;
-      border-radius: 4px;
-      color: #596171;
-      font-size: 13px;
-      font-weight: 650;
-    }
-
-    .tab:hover {
-      border-color: transparent;
-      background: #ffffff;
-      color: var(--v2-ink);
-    }
-
-    .tab.active {
-      border: 0;
-      background: #ffffff;
-      color: var(--v2-accent);
-      box-shadow: 0 1px 4px rgba(18, 28, 45, 0.12);
-    }
-
-    .tab-count {
-      min-width: 20px;
-      min-height: 20px;
-      margin-left: 6px;
-      padding: 0 5px;
-      border-radius: 4px;
-      background: #edf0f4;
-      color: #596171;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .tab.active .tab-count {
-      background: var(--v2-accent-soft);
-      color: var(--v2-accent);
-    }
-
-    .add-panel {
-      grid-template-columns: minmax(0, 1fr) 92px;
-      width: 100%;
-      max-width: none;
-      gap: 8px;
-    }
-
-    input {
-      min-height: 40px;
-      padding: 0 13px;
-      border-color: var(--v2-line-strong);
-      border-radius: 5px;
-      color: var(--v2-ink);
-      font-size: 14px;
-      transition: border-color 150ms ease, box-shadow 150ms ease;
-    }
-
-    input::placeholder {
-      color: #a1a7b1;
-    }
-
-    input:focus {
-      border-color: var(--v2-accent);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-    }
-
-    button {
-      border-color: var(--v2-line-strong);
-      border-radius: 5px;
-      font-family: inherit;
-      transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
-    }
-
-    button:focus-visible {
-      outline: 3px solid rgba(37, 99, 235, 0.22);
-      outline-offset: 2px;
-    }
-
-    .primary {
-      min-height: 40px;
-      border-color: var(--v2-accent);
-      background: var(--v2-accent);
-      font-weight: 700;
-      box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2);
-    }
-
-    .primary:hover {
-      border-color: var(--v2-accent-hover);
-      background: var(--v2-accent-hover);
-    }
-
-    .list {
-      gap: 0;
-      margin: 0;
-      padding: 0 22px 10px;
-    }
-
-    .drama {
-      grid-template-columns: 34px minmax(360px, 1fr) 188px minmax(260px, auto);
-      gap: 18px;
-      min-height: 112px;
-      padding: 19px 0;
-      border-bottom: 1px solid var(--v2-line);
-      background: #ffffff;
-    }
-
-    .drama:last-child {
-      border-bottom: 0;
-    }
-
-    .drama:hover {
-      background: #fafbfc;
-    }
-
-    .drama.drag-over {
-      border-color: var(--v2-accent);
-      background: var(--v2-accent-soft);
-      box-shadow: inset 0 2px 0 var(--v2-accent);
-    }
-
-    .drag-handle {
-      width: 32px;
-      height: 44px;
-      border: 0;
-      border-radius: 4px;
-      background: transparent;
-      color: #b1b7c1;
-      font-size: 17px;
-    }
-
-    .drag-handle:hover {
-      border-color: transparent;
-      background: #edf0f4;
-      color: #687080;
-    }
-
-    .drama-main {
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 16px;
-    }
-
-    .index-mark {
-      width: 44px;
-      height: 44px;
-      border: 1px solid #d9e5ff;
-      border-radius: 6px;
-      background: var(--v2-accent-soft);
-      color: var(--v2-accent);
-      font-size: 13px;
-      font-weight: 750;
-    }
-
-    .name {
-      color: var(--v2-ink);
-      font-size: 25px;
-      font-weight: 760;
-      line-height: 1.2;
-      letter-spacing: 0;
-    }
-
-    .row-meta {
-      gap: 9px;
-      margin-top: 9px;
-    }
-
-    .status-pill {
-      padding: 3px 7px;
-      border-radius: 4px;
-      background: var(--v2-accent-soft);
-      color: var(--v2-accent);
-      font-size: 10px;
-      font-weight: 750;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .status-pill.watching {
-      color: var(--v2-accent);
-    }
-
-    .status-pill.archived {
-      background: var(--v2-archived-soft);
-      color: var(--v2-archived);
-    }
-
-    .status-pill.completed {
-      background: var(--v2-completed-soft);
-      color: var(--v2-completed);
-    }
-
-    .meta {
-      color: var(--v2-subtle);
-      font-size: 12px;
-    }
-
-    .episode-stack {
-      gap: 8px;
-      justify-items: start;
-    }
-
-    .episode-label {
-      color: var(--v2-subtle);
-      font-size: 10px;
-      font-weight: 750;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .episode-controls {
-      grid-template-columns: 34px 82px 34px;
-      gap: 5px;
-    }
-
-    .episode-button,
-    .episode-input {
-      min-height: 36px;
-      border-color: var(--v2-line-strong);
-      border-radius: 5px;
-    }
-
-    .episode-button {
-      width: 34px;
-      min-width: 34px;
-      color: #596171;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .episode-button:hover {
-      border-color: #b9c9eb;
-      background: var(--v2-accent-soft);
-      color: var(--v2-accent);
-    }
-
-    .episode-input {
-      width: 82px;
-      color: var(--v2-ink);
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .actions {
-      gap: 4px;
-    }
-
-    .small {
-      min-height: 34px;
-      padding: 0 9px;
-      border: 0;
-      border-radius: 4px;
-      background: transparent;
-      color: var(--v2-accent);
-      font-size: 12px;
-      font-weight: 650;
-    }
-
-    .small:hover {
-      background: var(--v2-accent-soft);
-      color: var(--v2-accent-hover);
-    }
-
-    .archive {
-      color: var(--v2-archived);
-    }
-
-    .archive:hover {
-      background: var(--v2-archived-soft);
-      color: #854d0e;
-    }
-
-    .complete {
-      color: var(--v2-completed);
-    }
-
-    .complete:hover {
-      background: var(--v2-completed-soft);
-      color: #065f46;
-    }
-
-    .delete {
-      color: var(--v2-danger);
-    }
-
-    .delete:hover {
-      background: var(--v2-danger-soft);
-      color: #a61f27;
-    }
-
-    .empty {
-      margin: 22px 0 12px;
-      padding: 56px 24px;
-      border: 1px dashed var(--v2-line-strong);
-      border-radius: 6px;
-      background: #fafbfc;
-      box-shadow: none;
-      color: var(--v2-muted);
-    }
-
-    @media (max-width: 1180px) {
-      .app {
-        width: min(100% - 40px, 1480px);
-      }
-
-      .library-toolbar {
-        grid-template-columns: auto 1fr;
-      }
-
-      .add-panel {
-        grid-column: 1 / -1;
-      }
-
-      .drag-note {
-        justify-self: end;
-      }
-
-      .drama {
-        grid-template-columns: 34px minmax(300px, 1fr) 188px;
-      }
-
-      .actions {
-        grid-column: 2 / -1;
-        justify-content: flex-start;
-        margin-top: -8px;
-      }
-    }
-
-    @media (max-width: 860px) {
-      body {
-        min-width: 0;
-      }
-
-      .app {
-        width: min(100% - 28px, 1480px);
-        padding: 24px 0 40px;
-      }
-
-      header {
-        display: flex;
-        padding: 0;
-      }
-
-      h1 {
-        font-size: 28px;
-      }
-
-      .summary {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .summary-item {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
-        gap: 6px;
-        padding: 18px;
-        text-align: center;
-      }
-
-      .summary-number {
-        grid-row: auto;
-        min-width: 0;
-      }
-
-      .summary-item + .summary-item {
-        border-top: 0;
-        border-left: 1px solid var(--v2-line);
-      }
-
-      .summary-label::before {
-        display: none;
-      }
-
-      .drama {
-        grid-template-columns: 34px minmax(0, 1fr);
-      }
-
-      .episode-stack,
-      .actions {
-        grid-column: 2;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .app {
-        width: min(100% - 20px, 1480px);
-        padding-top: 18px;
-      }
-
-      header {
-        display: block;
-        min-height: 0;
-      }
-
-      .header-side {
-        margin-top: 14px;
-      }
-
-      .save-status {
-        white-space: normal;
-      }
-
-      .summary {
-        grid-template-columns: 1fr;
-      }
-
-      .summary-item {
-        grid-template-columns: 52px 1fr;
-        text-align: left;
-      }
-
-      .summary-number {
-        grid-row: 1;
-      }
-
-      .summary-item + .summary-item {
-        border-top: 1px solid var(--v2-line);
-        border-left: 0;
-      }
-
-      .library-toolbar {
-        grid-template-columns: 1fr;
-        padding: 14px;
-      }
-
-      .tabs,
-      .add-panel {
-        width: 100%;
-      }
-
-      .tabs {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .tab {
-        min-width: 0;
-        padding: 0 8px;
-      }
-
-      .drag-note {
-        display: none;
-      }
-
-      .add-panel {
-        grid-column: auto;
-        grid-template-columns: minmax(0, 1fr) 80px;
-      }
-
-      .list {
-        padding: 0 14px 8px;
-      }
-
-      .drama {
-        grid-template-columns: 1fr;
-        gap: 12px;
-        padding: 18px 0;
-      }
-
-      .drag-handle {
-        display: none;
-      }
-
-      .drama-main {
-        grid-template-columns: 40px minmax(0, 1fr);
-      }
-
-      .index-mark {
-        width: 40px;
-        height: 40px;
-      }
-
-      .name {
-        font-size: 22px;
-      }
-
-      .episode-stack,
-      .actions {
-        grid-column: auto;
-      }
-
-      .episode-controls {
-        width: 100%;
-        grid-template-columns: 40px minmax(0, 1fr) 40px;
-      }
-
-      .episode-input {
-        width: 100%;
-      }
-
-      .actions {
-        display: flex;
-        justify-content: flex-start;
-      }
-    }
-
-    /* v3 refined media desk */
-    :root {
-      --v3-canvas: #f2f4f7;
-      --v3-surface: #ffffff;
-      --v3-ink: #161b26;
-      --v3-muted: #667085;
-      --v3-subtle: #98a2b3;
-      --v3-line: #e4e7ec;
-      --v3-line-strong: #d0d5dd;
-      --v3-blue: #175cd3;
-      --v3-blue-hover: #1849a9;
-      --v3-blue-soft: #eff4ff;
-      --v3-amber: #b54708;
-      --v3-amber-soft: #fffaeb;
-      --v3-green: #067647;
-      --v3-green-soft: #ecfdf3;
-      --v3-red: #b42318;
-      --v3-red-soft: #fef3f2;
-      --v3-shadow: 0 1px 3px rgba(16, 24, 40, 0.06), 0 12px 28px rgba(16, 24, 40, 0.05);
-    }
-
-    body {
-      background: var(--v3-canvas);
-      color: var(--v3-ink);
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-    }
-
-    .app-frame {
-      background: var(--v3-canvas);
-    }
-
-    .app {
-      width: min(1440px, calc(100% - 72px));
-      padding: 42px 0 64px;
-    }
-
-    header {
-      position: relative;
-      min-height: 92px;
-      margin-bottom: 22px;
-      padding: 4px 4px 4px 22px;
-    }
-
-    header::before {
-      position: absolute;
-      inset: 7px auto 7px 0;
-      width: 4px;
-      border-radius: 2px;
-      background: var(--v3-blue);
-      content: "";
-    }
-
-    h1 {
-      font-size: 36px;
-      font-weight: 760;
-      line-height: 1.15;
-    }
-
-    .subtitle {
-      margin-top: 9px;
-      color: var(--v3-muted);
-      font-size: 14px;
-    }
-
-    .header-side {
-      gap: 16px;
-    }
-
-    .total-pill {
-      min-height: 46px;
-      padding: 0 17px;
-      border-color: var(--v3-line);
-      border-radius: 7px;
-      background: var(--v3-surface);
-      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
-    }
-
-    .total-pill strong {
-      color: var(--v3-blue);
-      font-size: 23px;
-    }
-
-    .save-status {
-      color: var(--v3-muted);
-      font-size: 12px;
-    }
-
-    .tracker-shell {
-      gap: 20px;
-    }
-
-    .summary {
-      min-height: 116px;
-      border-color: var(--v3-line);
-      border-radius: 8px;
-      background: var(--v3-surface);
-      box-shadow: var(--v3-shadow);
-    }
-
-    .summary-item {
-      position: relative;
-      grid-template-columns: 70px 1fr;
-      column-gap: 16px;
-      padding: 24px 30px;
-    }
-
-    .summary-item::after {
-      position: absolute;
-      inset: 0 auto auto 0;
-      width: 100%;
-      height: 3px;
-      background: var(--v3-blue);
-      content: "";
-    }
-
-    .summary-item:nth-child(2)::after {
-      background: #dc6803;
-    }
-
-    .summary-item:nth-child(3)::after {
-      background: #079455;
-    }
-
-    .summary-item + .summary-item {
-      border-color: var(--v3-line);
-    }
-
-    .summary-number {
-      min-width: 70px;
-      color: var(--v3-blue);
-      font-size: 38px;
-      font-weight: 720;
-      letter-spacing: 0;
-    }
-
-    .summary-item:nth-child(2) .summary-number {
-      color: var(--v3-amber);
-    }
-
-    .summary-item:nth-child(3) .summary-number {
-      color: var(--v3-green);
-    }
-
-    .summary-label {
-      color: var(--v3-muted);
-      font-size: 14px;
-      font-weight: 560;
-    }
-
-    .summary-label::before {
-      margin-bottom: 6px;
-      color: var(--v3-subtle);
-      font-size: 10px;
-      font-weight: 750;
-      letter-spacing: 0.08em;
-      content: "Collection";
-    }
-
-    .workspace-card {
-      border-color: var(--v3-line);
-      background: var(--v3-surface);
-      box-shadow: var(--v3-shadow);
-    }
-
-    .library-toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 4;
-      grid-template-columns: auto minmax(100px, 1fr) minmax(430px, 560px);
-      min-height: 82px;
-      padding: 18px 24px;
-      border-color: var(--v3-line);
-      background: rgba(255, 255, 255, 0.97);
-      box-shadow: 0 1px 0 rgba(16, 24, 40, 0.02);
-    }
-
-    .drag-note {
-      color: var(--v3-subtle);
-      font-size: 12px;
-    }
-
-    .tabs {
-      gap: 3px;
-      padding: 4px;
-      border-color: var(--v3-line);
-      border-radius: 7px;
-      background: #f2f4f7;
-    }
-
-    .tab {
-      min-width: 108px;
-      min-height: 38px;
-      border-radius: 5px;
-      color: #475467;
-      font-size: 13px;
-      font-weight: 650;
-    }
-
-    .tab:hover {
-      background: rgba(255, 255, 255, 0.72);
-      color: var(--v3-ink);
-    }
-
-    .tab.active {
-      color: var(--v3-blue);
-      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.13);
-    }
-
-    .tab-count {
-      min-width: 21px;
-      min-height: 20px;
-      border-radius: 4px;
-      background: #e4e7ec;
-      color: #475467;
-    }
-
-    .tab.active .tab-count {
-      background: var(--v3-blue-soft);
-      color: var(--v3-blue);
-    }
-
-    .add-panel {
-      grid-template-columns: minmax(0, 1fr) 96px;
-      gap: 9px;
-    }
-
-    input {
-      min-height: 42px;
-      padding: 0 14px;
-      border-color: var(--v3-line-strong);
-      border-radius: 6px;
-      color: var(--v3-ink);
-      background: #ffffff;
-    }
-
-    input::placeholder {
-      color: var(--v3-subtle);
-    }
-
-    input:focus {
-      border-color: #84adff;
-      box-shadow: 0 0 0 4px rgba(23, 92, 211, 0.12);
-    }
-
-    button {
-      border-radius: 6px;
-    }
-
-    button:focus-visible {
-      outline-color: rgba(23, 92, 211, 0.26);
-    }
-
-    .primary {
-      min-height: 42px;
-      border-color: var(--v3-blue);
-      background: var(--v3-blue);
-      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
-    }
-
-    .primary:hover {
-      border-color: var(--v3-blue-hover);
-      background: var(--v3-blue-hover);
-    }
-
-    .list-column-head {
-      display: grid;
-      grid-template-columns: 34px minmax(360px, 1fr) 188px minmax(260px, auto);
-      gap: 18px;
-      align-items: center;
-      min-height: 44px;
-      padding: 0 24px;
-      border-bottom: 1px solid var(--v3-line);
-      background: #f9fafb;
-      color: var(--v3-subtle);
-      font-size: 10px;
-      font-weight: 750;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-    }
-
-    .list-column-head span:last-child {
-      text-align: right;
-    }
-
-    .list {
-      padding: 0 24px 10px;
-    }
-
-    .drama {
-      grid-template-columns: 34px minmax(360px, 1fr) 188px minmax(260px, auto);
-      gap: 18px;
-      min-height: 108px;
-      padding: 18px 0;
-      border-color: var(--v3-line);
-      transition: background 140ms ease, box-shadow 140ms ease;
-    }
-
-    .drama:hover {
-      background: #f9fafb;
-      box-shadow: inset 3px 0 0 #84adff;
-    }
-
-    .drama.drag-over {
-      border-color: #84adff;
-      background: var(--v3-blue-soft);
-      box-shadow: inset 3px 0 0 var(--v3-blue), inset 0 2px 0 var(--v3-blue);
-    }
-
-    .drag-handle {
-      align-self: stretch;
-      width: 32px;
-      height: auto;
-      min-height: 48px;
-      color: #b8bec8;
-    }
-
-    .drag-handle:hover {
-      background: #eaecf0;
-      color: #667085;
-    }
-
-    .drama-main {
-      grid-template-columns: 46px minmax(0, 1fr);
-      gap: 17px;
-    }
-
-    .index-mark {
-      width: 46px;
-      height: 46px;
-      border-color: #d1e0ff;
-      border-radius: 7px;
-      background: var(--v3-blue-soft);
-      color: var(--v3-blue);
-      font-size: 13px;
-      font-weight: 750;
-    }
-
-    .name {
-      color: var(--v3-ink);
-      font-size: 26px;
-      font-weight: 760;
-      line-height: 1.18;
-    }
-
-    .row-meta {
-      gap: 10px;
-      margin-top: 9px;
-    }
-
-    .status-pill {
-      padding: 3px 7px;
-      border-radius: 4px;
-      background: var(--v3-blue-soft);
-      color: var(--v3-blue);
-      font-size: 10px;
-      font-weight: 760;
-    }
-
-    .status-pill.archived {
-      background: var(--v3-amber-soft);
-      color: var(--v3-amber);
-    }
-
-    .status-pill.completed {
-      background: var(--v3-green-soft);
-      color: var(--v3-green);
-    }
-
-    .meta {
-      color: var(--v3-subtle);
-      font-size: 12px;
-    }
-
-    .episode-stack {
-      gap: 9px;
-    }
-
-    .episode-label {
-      color: var(--v3-subtle);
-      font-size: 10px;
-      font-weight: 760;
-    }
-
-    .episode-controls {
-      display: flex;
-      gap: 0;
-    }
-
-    .episode-button,
-    .episode-input {
-      min-height: 38px;
-      border-color: var(--v3-line-strong);
-      border-radius: 0;
-    }
-
-    .episode-button {
-      width: 38px;
-      min-width: 38px;
-      background: #f9fafb;
-      color: #475467;
-      font-size: 18px;
-    }
-
-    .episode-button:first-child {
-      border-radius: 6px 0 0 6px;
-    }
-
-    .episode-button:last-child {
-      border-radius: 0 6px 6px 0;
-    }
-
-    .episode-button + .episode-input,
-    .episode-input + .episode-button {
-      margin-left: -1px;
-    }
-
-    .episode-button:hover {
-      position: relative;
-      z-index: 1;
-      border-color: #84adff;
-      background: var(--v3-blue-soft);
-      color: var(--v3-blue);
-    }
-
-    .episode-input {
-      width: 82px;
-      border-radius: 0;
-      color: var(--v3-ink);
-      background: #ffffff;
-      font-size: 15px;
-      font-weight: 720;
-    }
-
-    .actions {
-      gap: 6px;
-    }
-
-    .small {
-      min-height: 36px;
-      padding: 0 10px;
-      border: 1px solid transparent;
-      border-radius: 5px;
-      color: var(--v3-blue);
-      font-size: 12px;
-      font-weight: 650;
-    }
-
-    .small:hover {
-      border-color: #d1e0ff;
-      background: var(--v3-blue-soft);
-      color: var(--v3-blue-hover);
-    }
-
-    .archive {
-      color: var(--v3-amber);
-    }
-
-    .archive:hover {
-      border-color: #fedf89;
-      background: var(--v3-amber-soft);
-      color: #93370d;
-    }
-
-    .complete {
-      color: var(--v3-green);
-    }
-
-    .complete:hover {
-      border-color: #abefc6;
-      background: var(--v3-green-soft);
-      color: #05603a;
-    }
-
-    .delete {
-      color: var(--v3-red);
-    }
-
-    .delete:hover {
-      border-color: #fecdca;
-      background: var(--v3-red-soft);
-      color: #912018;
-    }
-
-    .empty {
-      margin: 24px 0 14px;
-      padding: 64px 24px;
-      border-color: var(--v3-line-strong);
-      border-radius: 7px;
-      background: #f9fafb;
-      color: var(--v3-muted);
-    }
-
-    .empty strong {
-      color: var(--v3-ink);
-      font-size: 19px;
-    }
-
-    @media (max-width: 1180px) {
-      .app {
-        width: min(100% - 44px, 1440px);
-      }
-
-      .library-toolbar {
-        grid-template-columns: auto 1fr;
-      }
-
-      .add-panel {
-        grid-column: 1 / -1;
-      }
-
-      .list-column-head,
-      .drama {
-        grid-template-columns: 34px minmax(300px, 1fr) 188px;
-      }
-
-      .list-column-head span:last-child {
-        display: none;
-      }
-
-      .actions {
-        grid-column: 2 / -1;
-        margin-top: -7px;
-      }
-    }
-
-    @media (max-width: 860px) {
-      .app {
-        width: min(100% - 30px, 1440px);
-        padding-top: 28px;
-      }
-
-      header {
-        padding-left: 18px;
-      }
-
-      h1 {
-        font-size: 31px;
-      }
-
-      .summary-item {
-        grid-template-columns: 1fr;
-      }
-
-      .list-column-head {
-        display: none;
-      }
-
-      .list {
-        padding-top: 4px;
-      }
-
-      .drama {
-        grid-template-columns: 34px minmax(0, 1fr);
-      }
-
-      .episode-stack,
-      .actions {
-        grid-column: 2;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .app {
-        width: min(100% - 20px, 1440px);
-        padding-top: 20px;
-      }
-
-      header {
-        padding: 3px 2px 3px 16px;
-      }
-
-      header::before {
-        inset-block: 4px;
-      }
-
-      h1 {
-        font-size: 29px;
-      }
-
-      .summary-item {
-        grid-template-columns: 58px 1fr;
-      }
-
-      .summary-number {
-        min-width: 58px;
-        font-size: 32px;
-      }
-
-      .library-toolbar {
-        padding: 14px;
-      }
-
-      .list {
-        padding: 0 14px 8px;
-      }
-
-      .drama {
-        grid-template-columns: 1fr;
-        padding: 20px 0;
-      }
-
-      .name {
-        font-size: 23px;
-      }
-
-      .episode-stack,
-      .actions {
-        grid-column: auto;
-      }
-
-      .episode-controls {
-        width: 100%;
-      }
-
-      .episode-input {
-        flex: 1;
-      }
-    }
-
-    /* v3 final polish pass */
-    .app {
-      width: min(1400px, calc(100% - 72px));
-      padding-top: 36px;
-    }
-
-    header {
-      min-height: 84px;
-      margin-bottom: 18px;
-    }
-
-    h1 {
-      font-size: 34px;
-      font-weight: 740;
-    }
-
-    .total-pill,
-    .summary-number,
-    .tab-count,
-    .index-mark,
-    .episode-input {
-      font-variant-numeric: tabular-nums;
-    }
-
-    .summary {
-      min-height: 96px;
-    }
-
-    .summary-item {
-      grid-template-columns: 62px minmax(0, 1fr);
-      column-gap: 14px;
-      padding: 20px 28px;
-    }
-
-    .summary-item::after {
-      display: none;
-    }
-
-    .summary-number {
-      min-width: 62px;
-      font-size: 32px;
-      font-weight: 700;
-    }
-
-    .summary-label {
-      font-size: 13px;
-      font-weight: 580;
-    }
-
-    .summary-label::before {
-      display: none;
-    }
-
-    .workspace-card {
-      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05), 0 8px 20px rgba(16, 24, 40, 0.04);
-    }
-
-    .library-toolbar {
-      min-height: 76px;
-      padding: 15px 24px;
-    }
-
-    .tabs {
-      padding: 3px;
-    }
-
-    .tab {
-      min-height: 36px;
-    }
-
-    .add-panel,
-    .add-panel input,
-    .add-panel .primary {
-      min-height: 40px;
-    }
-
-    .list-column-head {
-      position: sticky;
-      top: 76px;
-      z-index: 3;
-      min-height: 42px;
-      background: #f8f9fb;
-    }
-
-    .list {
-      padding-bottom: 8px;
-    }
-
-    .drama {
-      min-height: 100px;
-      padding: 16px 0;
-    }
-
-    .drama:hover {
-      box-shadow: inset 2px 0 0 #84adff;
-    }
-
-    .drama-main {
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 16px;
-    }
-
-    .index-mark {
-      width: 44px;
-      height: 44px;
-      background: #f4f7ff;
-    }
-
-    .name {
-      font-size: 25px;
-      font-weight: 740;
-      line-height: 1.2;
-    }
-
-    .row-meta {
-      margin-top: 8px;
-    }
-
-    .episode-stack {
-      align-self: center;
-      gap: 0;
-    }
-
-    .episode-label {
-      display: none;
-    }
-
-    .actions {
-      align-self: center;
-      gap: 2px;
-      padding: 3px;
-      border: 1px solid var(--v3-line);
-      border-radius: 6px;
-      background: #f9fafb;
-    }
-
-    .small {
-      min-height: 32px;
-      padding: 0 9px;
-      border: 0;
-      border-radius: 4px;
-    }
-
-    .small:hover {
-      border: 0;
-    }
-
-    @media (max-width: 1180px) {
-      .app {
-        width: min(100% - 44px, 1400px);
-      }
-
-      .actions {
-        width: fit-content;
-        margin-top: -5px;
-      }
-    }
-
-    @media (max-width: 860px) {
-      .app {
-        width: min(100% - 30px, 1400px);
-      }
-
-      .episode-stack {
-        gap: 8px;
-      }
-
-      .episode-label {
-        display: block;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .app {
-        width: min(100% - 20px, 1400px);
-      }
-
-      .summary-item {
-        grid-template-columns: 54px 1fr;
-      }
-
-      .summary-number {
-        min-width: 54px;
-      }
-
-      .actions {
-        width: 100%;
-        padding: 0;
-        border: 0;
-        background: transparent;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-
-    /* v3 list micro-polish */
-    .header-side {
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-    }
-
-    .total-pill {
-      min-height: 44px;
-    }
-
-    .save-status {
-      padding-right: 2px;
-      line-height: 1.35;
-      text-align: right;
-    }
-
-    .drama {
-      isolation: isolate;
-    }
-
-    .drama-main > div:last-child {
-      min-width: 0;
-    }
-
-    .name {
-      overflow-wrap: anywhere;
-    }
-
-    .status-pill {
-      border: 1px solid #d1e0ff;
-    }
-
-    .status-pill.archived {
-      border-color: #fedf89;
-    }
-
-    .status-pill.completed {
-      border-color: #abefc6;
-    }
-
-    .episode-controls {
-      border-radius: 6px;
-      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
-    }
-
-    .episode-input:focus {
-      position: relative;
-      z-index: 2;
-    }
-
-    .actions {
-      opacity: 0.76;
-      transition: opacity 140ms ease, background 140ms ease, border-color 140ms ease;
-    }
-
-    .drama:hover .actions,
-    .drama:focus-within .actions {
-      border-color: var(--v3-line-strong);
-      background: #ffffff;
-      opacity: 1;
-    }
-
-    .small {
-      white-space: nowrap;
-    }
-
-    .small:focus-visible {
-      position: relative;
-      z-index: 1;
-    }
-
-    @media (max-width: 860px) {
-      .actions {
-        opacity: 1;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .header-side {
-        align-items: flex-start;
-      }
-
-      .save-status {
-        padding-right: 0;
-        text-align: left;
-      }
-    }
-
-    /* v3 alignment and accessibility polish */
-    ::selection {
-      background: #d1e0ff;
-      color: var(--v3-ink);
-    }
-
-    .list-column-head span:nth-child(3) {
-      text-align: center;
-    }
-
-    .drag-handle {
-      justify-self: center;
-    }
-
-    .episode-stack {
-      justify-self: center;
-    }
-
-    .actions {
-      justify-self: end;
-    }
-
-    .drama:focus-within {
-      background: #f9fafb;
-      box-shadow: inset 2px 0 0 var(--v3-blue);
-    }
-
-    .add-panel input:hover {
-      border-color: #98a2b3;
-    }
-
-    .add-panel input:focus:hover {
-      border-color: #84adff;
-    }
-
-    .primary:active,
-    .episode-button:active,
-    .small:active {
-      transform: translateY(1px);
-    }
-
-    @media (max-width: 1180px) {
-      .actions {
-        justify-self: start;
-      }
-    }
-
-    @media (max-width: 860px) {
-      .episode-stack {
-        justify-self: start;
-      }
-    }
-
-    /* v3 status and drag polish */
-    .library-toolbar {
-      -webkit-backdrop-filter: blur(12px);
-      backdrop-filter: blur(12px);
-    }
-
-    .list-column-head {
-      background: rgba(248, 249, 251, 0.96);
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-    }
-
-    .name {
-      text-wrap: pretty;
-    }
-
-    .meta {
-      font-variant-numeric: tabular-nums;
-    }
-
-    .drag-handle {
-      opacity: 0.48;
-      transition: opacity 140ms ease, background 140ms ease, color 140ms ease;
-    }
-
-    .drama:hover .drag-handle,
-    .drama:focus-within .drag-handle,
-    .drag-handle:active {
-      opacity: 1;
-    }
-
-    .drama.dragging {
-      background: #f8fafc;
-      box-shadow: 0 8px 20px rgba(16, 24, 40, 0.08);
-      opacity: 0.58;
-    }
-
-    .drama.archived .index-mark {
-      border-color: #fedf89;
-      background: var(--v3-amber-soft);
-      color: var(--v3-amber);
-    }
-
-    .drama.completed .index-mark {
-      border-color: #abefc6;
-      background: var(--v3-green-soft);
-      color: var(--v3-green);
-    }
-
-    .drama.archived:hover,
-    .drama.archived:focus-within {
-      box-shadow: inset 2px 0 0 #dc6803;
-    }
-
-    .drama.completed:hover,
-    .drama.completed:focus-within {
-      box-shadow: inset 2px 0 0 #079455;
-    }
-
-    @media (max-width: 860px) {
-      .drag-handle {
-        opacity: 0.72;
-      }
-    }
-
-    /* v3 interaction polish */
-    .primary:disabled {
-      border-color: #d0d5dd;
-      background: #eaecf0;
-      color: #98a2b3;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
-
-    .primary:disabled:hover,
-    .primary:disabled:active {
-      border-color: #d0d5dd;
-      background: #eaecf0;
-      color: #98a2b3;
-      transform: none;
-    }
-
-    .save-status[title] {
-      cursor: help;
-    }
-
-    /* v3 definitive finish */
-    body {
-      background: #f5f6f8;
-    }
-
-    .app-frame,
-    .app-content {
-      min-width: 0;
-      background: transparent;
-    }
-
-    .app {
-      width: min(1360px, calc(100% - 64px));
-      padding: 34px 0 56px;
-    }
-
-    header {
-      min-height: 78px;
-      margin-bottom: 18px;
-      padding: 2px 2px 2px 20px;
-    }
-
-    header::before {
-      inset-block: 3px;
-      width: 3px;
-      border-radius: 2px;
-    }
-
-    h1 {
-      font-size: 32px;
-      font-weight: 760;
-      line-height: 1.12;
-    }
-
-    .subtitle {
-      max-width: 660px;
-      margin-top: 7px;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .header-side {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .total-pill {
-      min-height: 42px;
-      padding: 0 14px;
-      border-radius: 8px;
-      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-    }
-
-    .total-pill strong {
-      font-size: 21px;
-    }
-
-    .save-status {
-      max-width: 150px;
-      text-align: left;
-    }
-
-    .tracker-shell {
-      grid-template-columns: minmax(0, 1fr) 276px;
-      gap: 16px;
-    }
-
-    .workspace-card {
-      gap: 0;
-      padding: 0;
-      overflow: clip;
-      border-radius: 8px;
-      background: #ffffff;
-      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 18px rgba(16, 24, 40, 0.035);
-    }
-
-    .library-toolbar {
-      grid-template-columns: auto minmax(100px, 1fr) minmax(390px, 520px);
-      min-height: 72px;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--v3-line);
-      background: rgba(255, 255, 255, 0.98);
-    }
-
-    .tabs {
-      border-radius: 7px;
-    }
-
-    .tab {
-      min-width: 104px;
-      min-height: 36px;
-      padding: 0 12px;
-    }
-
-    .tab.active {
-      background: #ffffff;
-    }
-
-    .drag-note {
-      justify-self: center;
-      white-space: nowrap;
-    }
-
-    .add-panel {
-      min-width: 0;
-      padding: 0;
-      border: 0;
-      border-radius: 6px;
-    }
-
-    .add-panel input,
-    .add-panel .primary {
-      min-height: 40px;
-    }
-
-    .add-panel .primary {
-      min-width: 88px;
-    }
-
-    .summary {
-      position: sticky;
-      top: 18px;
-      min-height: 0;
-      overflow: hidden;
-      border-radius: 8px;
-      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 18px rgba(16, 24, 40, 0.035);
-    }
-
-    .summary-item {
-      grid-template-columns: 54px minmax(0, 1fr);
-      min-height: 86px;
-      padding: 18px 20px;
-    }
-
-    .summary-number {
-      min-width: 54px;
-      font-size: 30px;
-    }
-
-    .summary-label {
-      line-height: 1.35;
-    }
-
-    .list-column-head {
-      top: 72px;
-      grid-template-columns: 32px minmax(320px, 1fr) 164px minmax(230px, auto);
-      min-height: 38px;
-      padding: 0 20px;
-    }
-
-    .list {
-      padding: 0 20px 4px;
-    }
-
-    .drama {
-      grid-template-columns: 32px minmax(320px, 1fr) 164px minmax(230px, auto);
-      gap: 16px;
-      min-height: 94px;
-      padding: 15px 0;
-    }
-
-    .drag-handle {
-      width: 30px;
-      min-height: 44px;
-    }
-
-    .drama-main {
-      grid-template-columns: 42px minmax(0, 1fr);
-      gap: 14px;
-    }
-
-    .index-mark {
-      width: 42px;
-      height: 42px;
-      border-radius: 6px;
-    }
-
-    .name {
-      font-size: 24px;
-      font-weight: 760;
-      line-height: 1.18;
-    }
-
-    .row-meta {
-      margin-top: 7px;
-    }
-
-    .actions {
-      padding: 2px;
-      border-radius: 6px;
-    }
-
-    .small {
-      min-height: 30px;
-      padding: 0 8px;
-    }
-
-    .empty {
-      margin: 20px 0;
-      border-radius: 7px;
-    }
-
-    @media (max-width: 1180px) {
-      .app {
-        width: min(100% - 40px, 1360px);
-      }
-
-      .tracker-shell {
-        grid-template-columns: 1fr;
-      }
-
-      .side-column {
-        grid-row: 1;
-      }
-
-      .summary {
-        position: static;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .summary-item {
-        min-height: 78px;
-      }
-
-      .summary-item + .summary-item {
-        border-top: 0;
-        border-left: 1px solid var(--v3-line);
-      }
-
-      .library-toolbar {
-        grid-template-columns: auto minmax(0, 1fr);
-      }
-
-      .drag-note {
-        justify-self: end;
-      }
-
-      .add-panel {
-        grid-column: 1 / -1;
-      }
-
-      .list-column-head,
-      .drama {
-        grid-template-columns: 32px minmax(300px, 1fr) 164px;
-      }
-
-      .actions {
-        grid-column: 2 / -1;
-        justify-self: start;
-        margin-top: -5px;
-      }
-    }
-
-    @media (max-width: 760px) {
-      .app {
-        width: min(100% - 28px, 1360px);
-        padding: 24px 0 40px;
-      }
-
-      header {
-        align-items: flex-start;
-      }
-
-      .header-side {
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 5px;
-      }
-
-      .save-status {
-        text-align: right;
-      }
-
-      .summary-item {
-        grid-template-columns: 48px minmax(0, 1fr);
-        padding: 16px;
-      }
-
-      .summary-number {
-        min-width: 48px;
-        font-size: 27px;
-      }
-
-      .list-column-head {
-        display: none;
-      }
-
-      .list {
-        padding-top: 4px;
-      }
-
-      .drama {
-        grid-template-columns: 32px minmax(0, 1fr);
-      }
-
-      .episode-stack,
-      .actions {
-        grid-column: 2;
-      }
-
-      .episode-stack {
-        justify-self: start;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .app {
-        width: min(100% - 20px, 1360px);
-        padding-top: 18px;
-      }
-
-      header {
-        display: block;
-        min-height: 0;
-        padding-left: 16px;
-      }
-
-      h1 {
-        font-size: 28px;
-      }
-
-      .subtitle {
-        max-width: 34ch;
-      }
-
-      .header-side {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 14px;
-      }
-
-      .save-status {
-        text-align: right;
-      }
-
-      .summary {
-        grid-template-columns: 1fr;
-      }
-
-      .summary-item {
-        grid-template-columns: 54px minmax(0, 1fr);
-        min-height: 68px;
-        padding: 13px 16px;
-      }
-
-      .summary-item + .summary-item {
-        border-top: 1px solid var(--v3-line);
-        border-left: 0;
-      }
-
-      .library-toolbar {
-        grid-template-columns: 1fr;
-        padding: 12px;
-      }
-
-      .tabs {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        width: 100%;
-      }
-
-      .tab {
-        min-width: 0;
-        padding: 0 6px;
-        font-size: 12px;
-      }
-
-      .tab-count {
-        min-width: 18px;
-        min-height: 18px;
-        margin-left: 4px;
-        padding-inline: 4px;
-      }
-
-      .drag-note {
-        display: none;
-      }
-
-      .add-panel {
-        grid-column: auto;
-        grid-template-columns: minmax(0, 1fr) 76px;
-      }
-
-      .add-panel .primary {
-        min-width: 76px;
-      }
-
-      .list {
-        padding: 0 14px 4px;
-      }
-
-      .drama {
-        grid-template-columns: 1fr;
-        gap: 11px;
-        min-height: 0;
-        padding: 17px 0;
-      }
-
-      .drag-handle {
-        display: none;
-      }
-
-      .drama-main {
-        grid-template-columns: 38px minmax(0, 1fr);
-        gap: 12px;
-      }
-
-      .index-mark {
-        width: 38px;
-        height: 38px;
-      }
-
-      .name {
-        font-size: 22px;
-      }
-
-      .episode-stack,
-      .actions {
-        grid-column: auto;
-      }
-
-      .episode-controls {
-        width: 100%;
-      }
-
-      .episode-input {
-        flex: 1;
-        width: auto;
-      }
-
-      .actions {
-        width: 100%;
-        margin-top: 0;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        opacity: 1;
-      }
-
-      .small {
-        min-height: 36px;
-      }
-    }
-
-    /* v3 screenshot layout correction */
-    .main-column,
-    .side-column,
-    .workspace-card,
-    .library-toolbar,
-    .list,
-    .drama {
-      min-width: 0;
-    }
-
-    .side-column {
-      order: 0;
-    }
-
-    .summary {
-      grid-template-columns: 1fr;
-    }
-
-    .summary-item + .summary-item {
-      border-top: 1px solid var(--v3-line);
-      border-left: 0;
-    }
-
-    @media (max-width: 1180px) and (min-width: 601px) {
-      .summary {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .summary-item + .summary-item {
-        border-top: 0;
-        border-left: 1px solid var(--v3-line);
-      }
-    }
-
-    /* v3 precision finish */
-    button,
-    input {
-      font-family: inherit;
-      touch-action: manipulation;
-    }
-
-    button {
-      transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 100ms ease;
-    }
-
-    button:focus-visible,
-    input:focus-visible {
-      outline: 3px solid rgba(23, 92, 211, 0.18);
-      outline-offset: 2px;
-    }
-
-    .tab,
-    .small,
-    .drag-note,
-    .save-status {
-      white-space: nowrap;
-    }
-
-    .tab:hover:not(.active) {
-      background: rgba(255, 255, 255, 0.72);
-    }
-
-    .primary:not(:disabled):hover {
-      box-shadow: 0 2px 5px rgba(23, 92, 211, 0.2);
-    }
-
-    .primary:not(:disabled):active {
-      box-shadow: none;
-    }
-
-    .name {
-      transition: color 140ms ease;
-    }
-
-    .drama:hover .name,
-    .drama:focus-within .name {
-      color: #0f4fb8;
-    }
-
-    .episode-controls {
-      overflow: hidden;
-      border: 1px solid var(--v3-line-strong);
-      background: #ffffff;
-    }
-
-    .episode-button,
-    .episode-input {
-      border-top: 0;
-      border-bottom: 0;
-    }
-
-    .episode-button:first-child {
-      border-left: 0;
-    }
-
-    .episode-button:last-child {
-      border-right: 0;
-    }
-
-    .episode-input {
-      -moz-appearance: textfield;
-    }
-
-    .episode-input::-webkit-inner-spin-button,
-    .episode-input::-webkit-outer-spin-button {
-      margin: 0;
-      -webkit-appearance: none;
-    }
-
-    .actions {
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
-    }
-
-    .small + .small {
-      border-left: 1px solid var(--v3-line);
-      border-radius: 0 4px 4px 0;
-    }
-
-    .small:first-child {
-      border-radius: 4px 0 0 4px;
-    }
-
-    .small:only-child {
-      border-radius: 4px;
-    }
-
-    @media (max-width: 1280px) and (min-width: 601px) {
-      .tracker-shell {
-        grid-template-columns: 1fr;
-      }
-
-      .side-column {
-        grid-row: 1;
-      }
-
-      .summary {
-        position: static;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .summary-item + .summary-item {
-        border-top: 0;
-        border-left: 1px solid var(--v3-line);
-      }
-
-      .library-toolbar {
-        grid-template-columns: auto minmax(0, 1fr);
-      }
-
-      .drag-note {
-        justify-self: end;
-      }
-
-      .add-panel {
-        grid-column: 1 / -1;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .tab,
-      .save-status {
-        white-space: normal;
-      }
-
-      .actions {
-        box-shadow: none;
-      }
-
-      .small + .small {
-        border-left: 0;
-        border-radius: 4px;
-      }
-
-      .small:first-child {
-        border-radius: 4px;
-      }
-    }
-
-    /* v3 iPhone card polish */
-    @media (max-width: 600px) {
-      .list {
-        padding: 6px 14px 8px;
-        overflow: hidden;
-      }
-
-      .drama,
-      .drama:hover,
-      .drama:focus-within,
-      .drama.archived:hover,
-      .drama.archived:focus-within,
-      .drama.completed:hover,
-      .drama.completed:focus-within {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 14px;
-        width: 100%;
-        margin: 0;
-        padding: 18px 2px 20px;
-        box-shadow: none;
-      }
-
-      .drama-main {
-        grid-template-columns: 42px minmax(0, 1fr);
-        gap: 12px;
-        width: 100%;
-        align-items: start;
-      }
-
-      .index-mark {
-        position: static;
-        width: 42px;
-        height: 42px;
-        margin: 0;
-        border-radius: 8px;
-        transform: none;
-      }
-
-      .name {
-        font-size: clamp(20px, 5.3vw, 23px);
-        line-height: 1.22;
-      }
-
-      .row-meta {
-        gap: 7px 10px;
-        margin-top: 7px;
-      }
-
-      .episode-stack {
-        display: grid;
-        width: 100%;
-        gap: 7px;
-      }
-
-      .episode-label {
-        display: block;
-        margin: 0;
-        font-size: 11px;
-        letter-spacing: 0.08em;
-      }
-
-      .episode-controls {
-        width: 100%;
-        min-height: 44px;
-        border-radius: 8px;
-      }
-
-      .episode-button {
-        flex: 0 0 52px;
-        min-width: 52px;
-        min-height: 44px;
-      }
-
-      .episode-input {
-        min-width: 0;
-        min-height: 44px;
-        font-size: 18px;
-      }
-
-      .actions {
-        display: flex;
-        grid-column: 1 / -1;
-        align-items: stretch;
-        gap: 8px;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-      }
-
-      .small,
-      .small:first-child,
-      .small + .small,
-      .small:only-child {
-        flex: 1 1 0;
-        min-width: 0;
-        min-height: 44px;
-        padding: 0 8px;
-        border: 1px solid var(--v3-line-strong);
-        border-radius: 8px;
-        background: #ffffff;
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .small.archive {
-        border-color: #fedf89;
-        background: var(--v3-amber-soft);
-      }
-
-      .small.complete {
-        border-color: #abefc6;
-        background: var(--v3-green-soft);
-      }
-
-      .small.delete {
-        border-color: #fecdca;
-        background: var(--v3-red-soft);
-      }
-    }
+    @media(prefers-reduced-motion:no-preference) { button { transition:border-color .15s,background .15s; } }
   </style>
 </head>
 <body>
-  <div class="app-frame">
-    <section class="app-content">
-      <main class="app">
-    <header>
-      <div>
-        <h1>Drama Tracker</h1>
-        <div class="subtitle">Keep every episode, season, and finished series in one calm, focused view.</div>
-      </div>
-      <div class="header-side">
-        <div class="total-pill"><strong id="totalCount">0</strong> titles</div>
-        <div class="save-status" id="saveStatus" role="status" aria-live="polite">Saved in this browser</div>
+  <main class="app">
+    <header class="header">
+      <div><div class="eyebrow">YOUR WATCHLIST, AT YOUR PACE</div><h1>Drama Tracker <span class="version">v4</span></h1><p class="subtitle">Pick up exactly where you left off.</p></div>
+      <div class="header-actions">
+        <button id="backupButton" type="button">Backup JSON</button>
+        <button id="restoreButton" type="button">Restore</button>
+        <button id="themeButton" type="button" aria-label="Color theme: system. Click to change">Theme: Auto</button>
+        <div class="save-status" id="saveStatus" role="status" aria-live="polite">Saved on this device</div>
       </div>
     </header>
-
-    <div class="tracker-shell">
-      <section class="main-column" aria-label="Drama list">
-        <div class="workspace-card">
-          <div class="library-toolbar">
-            <nav class="tabs" aria-label="Drama status tabs">
-              <button class="tab active" type="button" data-tab="watching" aria-pressed="true">Watching <span class="tab-count" id="watchingTabCount">0</span></button>
-              <button class="tab" type="button" data-tab="archived" aria-pressed="false">Archived <span class="tab-count" id="archivedTabCount">0</span></button>
-              <button class="tab" type="button" data-tab="completed" aria-pressed="false">Completed <span class="tab-count" id="completedTabCount">0</span></button>
-            </nav>
-
-            <span class="drag-note">Drag rows to reorder</span>
-
-            <form class="add-panel" id="addForm" aria-label="Add a drama">
-              <input id="dramaName" type="text" placeholder="Add a new drama or season" aria-label="Drama title" autocomplete="off" maxlength="120" required>
-              <button class="primary" id="addButton" type="submit" disabled>Add</button>
-            </form>
-          </div>
-
-          <div class="list-column-head" aria-hidden="true">
-            <span>Order</span>
-            <span>Drama</span>
-            <span>Episode</span>
-            <span>Actions</span>
-          </div>
-
-          <section class="list" id="dramaList" aria-live="polite"></section>
-        </div>
-      </section>
-
-      <aside class="side-column" aria-label="Drama totals">
-        <section class="summary">
-          <div class="summary-item">
-            <span class="summary-number" id="watchingCount">0</span>
-            <span class="summary-label">Watching now</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-number" id="archivedCount">0</span>
-            <span class="summary-label">Waiting for upcoming season</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-number" id="completedCount">0</span>
-            <span class="summary-label">All seasons completed</span>
-          </div>
-        </section>
-      </aside>
-    </div>
-      </main>
+    <div id="recovery" class="notice recovery" role="alert" hidden><div><p id="recoveryMessage"></p><button id="recoveryBackup" type="button">Download original data</button></div></div>
+    <section class="stats" aria-label="Your library at a glance">
+      <div class="stat watching"><strong id="watchingCount">0</strong><span>Watching</span></div>
+      <div class="stat"><strong id="archivedCount">0</strong><span>Archived</span></div>
+      <div class="stat completed"><strong id="completedCount">0</strong><span>Completed</span></div>
+      <div class="stat"><strong id="episodeCount">0</strong><span>Episodes tracked</span></div>
     </section>
-  </div>
-
-  <script>
+    <div class="notice" id="undoBar" hidden><span id="undoText"></span><button id="undoButton" type="button">Undo delete</button></div>
+    <section class="workspace" aria-label="Drama library">
+      <div class="toolbar">
+        <nav class="tabs" aria-label="Drama status">
+          <button class="tab active" data-tab="watching" type="button" aria-pressed="true">Watching <span class="count" id="watchingTabCount">0</span></button>
+          <button class="tab" data-tab="archived" type="button" aria-pressed="false">Archived <span class="count" id="archivedTabCount">0</span></button>
+          <button class="tab" data-tab="completed" type="button" aria-pressed="false">Completed <span class="count" id="completedTabCount">0</span></button>
+        </nav>
+        <form id="addForm" class="add-form" aria-label="Add a drama"><label for="dramaName" class="sr-only">New drama title</label><input id="dramaName" placeholder="Add a drama or a new season…" maxlength="120" required autocomplete="off"><button class="primary" id="addButton" type="submit" disabled>Add</button></form>
+        <div class="tools"><label class="sr-only" for="searchInput">Search current list</label><input type="search" id="searchInput" placeholder="Search titles or notes…" autocomplete="off"><label class="sr-only" for="sortSelect">Sort dramas</label><select id="sortSelect"><option value="manual">Your order</option><option value="updated">Recently updated</option><option value="title">Title A–Z</option><option value="progress">Most episodes</option></select><button class="clear-search" id="clearSearch" type="button" hidden>Clear search</button></div>
+        <p class="result-info" id="resultInfo" aria-live="polite"></p>
+      </div>
+      <section class="list" id="dramaList" aria-label="Dramas" tabindex="-1"></section>
+    </section>
+    <footer class="footer"><span id="libraryInfo">Your library stays in this browser. Back up to move devices.</span><button id="helpButton" type="button">iPhone &amp; data help ↗</button></footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <input type="file" id="restoreFile" accept="application/json,.json" hidden>
+  <dialog id="editDialog" aria-labelledby="editHeading">
+    <form id="editForm"><h2 id="editHeading">Edit drama</h2><p class="dialog-description">Keep the details that help you return.</p>
+      <label class="field">Title<input id="editName" maxlength="120" required></label>
+      <div class="field-row"><label class="field">Current episode<input id="editEpisodes" type="number" inputmode="numeric" min="0" max="999999" step="1" required></label><label class="field">Total episodes (optional)<input id="editTotal" type="number" inputmode="numeric" min="1" max="999999" step="1" placeholder="Unknown"></label></div>
+      <label class="field">Status<select id="editStatus"><option value="watching">Watching</option><option value="archived">Archived · waiting for next season</option><option value="completed">Completed</option></select></label>
+      <label class="field">Notes<textarea id="editNotes" rows="3" maxlength="2000" placeholder="Next season, a reminder, or where you stopped…"></textarea></label>
+      <label class="field">Watch link (optional)<input id="editUrl" type="url" maxlength="2000" placeholder="https://…"></label>
+      <p class="form-error" id="editError" role="alert" hidden></p><div class="dialog-actions"><button data-close="editDialog" type="button">Cancel</button><button class="primary" type="submit">Save changes</button></div>
+    </form>
+  </dialog>
+  <dialog id="restoreDialog" aria-labelledby="restoreHeading"><h2 id="restoreHeading">Restore a backup</h2><p class="dialog-description" id="restorePreview"></p><p class="help-text">This replaces this browser’s library. Download a backup of your current list before continuing.</p><p id="restoreError" class="form-error" role="alert" hidden></p><div class="dialog-actions"><button data-close="restoreDialog" type="button">Cancel</button><button id="restoreBackupButton" type="button">Back up current</button><button id="confirmRestore" class="primary" type="button">Replace library</button></div></dialog>
+  <dialog id="helpDialog" aria-labelledby="helpHeading"><h2 id="helpHeading">A little help</h2><div class="help-text"><p><strong>On iPhone:</strong> open your GitHub Pages website in Safari. Use Share (or More → Share), then Add to Home Screen. Turn on Open as Web App if shown.</p><p><strong>Your data:</strong> changes save on this device, in this browser. There is no account or automatic sync. Use Backup JSON, keep the file in Files or iCloud Drive, then Restore on another device.</p><p><strong>Upgrading from v3:</strong> your saved library carries over on the same site and browser. Starter titles are added only on the first visit. A title v3 already brought back needs deleting once in v4.</p><p><strong>Reordering:</strong> choose Your order and clear search. Use the up/down arrows on iPhone, or drag a row on desktop.</p><p><strong>Refreshing v4:</strong> reload your existing website. If an old bookmark ends in drama-tracker-v3.html, upload the updated file with that name too. Keep a backup before changing browsers or Home Screen installations.</p></div><div class="dialog-actions"><button data-close="helpDialog" type="button">Done</button></div></dialog>
+  <script id="tracker-core">
+    "use strict";
     const STORAGE_KEY = "drama-tracker-v1";
-    const tabs = ["watching", "archived", "completed"];
-    const tabLabels = {
-      watching: "Watching",
-      archived: "Archived",
-      completed: "Completed"
-    };
-    const initialDramas = [
-      { name: "摄影机不要停", episodes: 0 },
-      { name: "吞噬星空", episodes: 219 },
-      { name: "仙逆", episodes: 142 },
-      { name: "繁花", episodes: 0 },
-      { name: "山花烂漫时", episodes: 0 },
-      { name: "Tour de France", episodes: 0 },
-      { name: "沧元图第一季", episodes: 26 },
-      { name: "一人之下 4", episodes: 0 },
-      { name: "镖人", episodes: 15 },
-      { name: "伍六七之玄武国", episodes: 0 },
-      { name: "时光代理人 1", episodes: 11 },
-      { name: "武动乾坤 3", episodes: 12 },
-      { name: "雪鹰领主 3", episodes: 78 },
-      { name: "雾山五行 2", episodes: 7 },
-      { name: "一念永恒", episodes: 106 },
-      { name: "星辰变 4", episodes: 80 },
-      { name: "斩神 1", episodes: 15 },
-      { name: "Demon Slayer: infinite", episodes: 0 },
-      { name: "庆余年 2", episodes: 0 }
+    const STATUS_LABELS = { watching:"Watching", archived:"Archived", completed:"Completed" };
+    const MAX_EPISODES = 999999;
+    const INITIAL_DRAMAS = [
+      ["摄影机不要停",0],["吞噬星空",219],["仙逆",142],["繁花",0],["山花烂漫时",0],
+      ["Tour de France",0],["沧元图第一季",26],["一人之下 4",0],["镖人",15],["伍六七之玄武国",0],
+      ["时光代理人 1",11],["武动乾坤 3",12],["雪鹰领主 3",78],["雾山五行 2",7],["一念永恒",106],
+      ["星辰变 4",80],["斩神 1",15],["Demon Slayer: infinite",0],["庆余年 2",0]
     ];
-    const emptyMessages = {
-      watching: "No dramas in Watching. Add a drama above to start tracking episodes.",
-      archived: "No archived dramas. Move here when a season is completed and you are waiting for the next one.",
-      completed: "No completed dramas yet."
-    };
-
-    let activeTab = "watching";
-    let dramas = loadDramas();
-    let draggedDramaId = "";
-
-    const addForm = document.getElementById("addForm");
-    const dramaName = document.getElementById("dramaName");
-    const addButton = document.getElementById("addButton");
-    const dramaList = document.getElementById("dramaList");
-    const saveStatus = document.getElementById("saveStatus");
-
-    addForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const name = dramaName.value.trim();
-
-      if (!name) {
-        return;
-      }
-
-      dramas.unshift({
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        name,
-        episodes: 0,
-        status: "watching",
-        updatedAt: new Date().toISOString()
+    function createId() { return globalThis.crypto?.randomUUID?.() || "drama-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2); }
+    function episodeNumber(value, minimum=0) {
+      if ((typeof value !== "number" && typeof value !== "string") || String(value).trim() === "") throw new Error("Enter a whole episode number.");
+      const number = Number(value);
+      if (!Number.isSafeInteger(number) || number < minimum || number > MAX_EPISODES) throw new Error("Episodes must be whole numbers from " + minimum + " to " + MAX_EPISODES + ".");
+      return number;
+    }
+    function safeWatchUrl(value) {
+      if (!value) return "";
+      if (typeof value !== "string" || value.length > 2000) throw new Error("The watch link is invalid.");
+      let url;
+      try { url = new URL(value); } catch { throw new Error("Use a full watch link starting with https:// or http://."); }
+      if (!["https:","http:"].includes(url.protocol)) throw new Error("Use a watch link starting with https:// or http://.");
+      return url.href;
+    }
+    function normalizeDramas(records) {
+      if (!Array.isArray(records)) throw new Error("The library must be a list of dramas.");
+      const ids = new Set();
+      return records.map((item,index) => {
+        if (!item || typeof item !== "object" || typeof item.name !== "string" || !item.name.trim() || item.name.trim().length > 120) throw new Error("Drama " + (index+1) + " needs a title of 1–120 characters.");
+        if (!Object.hasOwn(STATUS_LABELS,item.status)) throw new Error("Drama " + (index+1) + " has an invalid status.");
+        let id = typeof item.id === "string" && item.id ? item.id : createId();
+        if (ids.has(id)) id = createId();
+        ids.add(id);
+        const episodes = episodeNumber(item.episodes);
+        const totalEpisodes = item.totalEpisodes == null || item.totalEpisodes === "" ? null : episodeNumber(item.totalEpisodes,1);
+        if (totalEpisodes !== null && episodes > totalEpisodes) throw new Error("Current episode cannot exceed total episodes for " + item.name + ".");
+        if (item.notes != null && (typeof item.notes !== "string" || item.notes.length > 2000)) throw new Error("Notes must be text of at most 2,000 characters.");
+        const updatedAt = typeof item.updatedAt === "string" && Number.isFinite(Date.parse(item.updatedAt)) ? item.updatedAt : new Date(0).toISOString();
+        return { id, name:item.name.trim(), episodes, status:item.status, updatedAt, totalEpisodes, notes:item.notes || "", url:safeWatchUrl(item.url) };
       });
-
-      dramaName.value = "";
-      addButton.disabled = true;
-      activeTab = "watching";
-      saveAndRender();
-    });
-
-    dramaName.addEventListener("input", () => {
-      addButton.disabled = !dramaName.value.trim();
-    });
-
-    document.querySelectorAll(".tab").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        activeTab = tab.dataset.tab;
-        render();
-      });
-    });
-
-    document.querySelector(".tabs").addEventListener("keydown", (event) => {
-      const currentTab = event.target.closest(".tab");
-      const navigationKeys = ["ArrowLeft", "ArrowRight", "Home", "End"];
-
-      if (!currentTab || !navigationKeys.includes(event.key)) {
-        return;
+    }
+    function saveLibrary(storage,records,expectedRaw) {
+      const normalized = normalizeDramas(records);
+      if (storage.getItem(STORAGE_KEY) !== expectedRaw) {
+        const error = new Error("Your library changed in another tab. Review the latest list and try again.");
+        error.code = "CONFLICT";
+        throw error;
       }
-
-      event.preventDefault();
-      const tabButtons = Array.from(document.querySelectorAll(".tab"));
-      const currentIndex = tabButtons.indexOf(currentTab);
-      let nextIndex = currentIndex;
-
-      if (event.key === "ArrowLeft") {
-        nextIndex = (currentIndex - 1 + tabButtons.length) % tabButtons.length;
-      }
-
-      if (event.key === "ArrowRight") {
-        nextIndex = (currentIndex + 1) % tabButtons.length;
-      }
-
-      if (event.key === "Home") {
-        nextIndex = 0;
-      }
-
-      if (event.key === "End") {
-        nextIndex = tabButtons.length - 1;
-      }
-
-      tabButtons[nextIndex].focus();
-      tabButtons[nextIndex].click();
-    });
-
-    dramaList.addEventListener("click", (event) => {
-      const button = event.target.closest("button[data-action]");
-
-      if (!button) {
-        return;
-      }
-
-      const drama = dramas.find((item) => item.id === button.dataset.id);
-
-      if (!drama) {
-        return;
-      }
-
-      if (button.dataset.action === "increase") {
-        drama.episodes += 1;
-      }
-
-      if (button.dataset.action === "decrease") {
-        drama.episodes = Math.max(0, drama.episodes - 1);
-      }
-
-      if (button.dataset.action === "move") {
-        drama.status = button.dataset.status;
-        activeTab = button.dataset.status;
-      }
-
-      if (button.dataset.action === "delete") {
-        dramas = dramas.filter((item) => item.id !== drama.id);
-        saveAndRender();
-        return;
-      }
-
-      drama.updatedAt = new Date().toISOString();
-      saveAndRender();
-    });
-
-    dramaList.addEventListener("change", (event) => {
-      const input = event.target.closest("input[data-action='set-episode']");
-
-      if (!input) {
-        return;
-      }
-
-      const drama = dramas.find((item) => item.id === input.dataset.id);
-
-      if (!drama) {
-        return;
-      }
-
-      drama.episodes = Math.max(0, Number.parseInt(input.value, 10) || 0);
-      drama.updatedAt = new Date().toISOString();
-      saveAndRender();
-    });
-
-    dramaList.addEventListener("keydown", (event) => {
-      const input = event.target.closest("input[data-action='set-episode']");
-
-      if (input && event.key === "Enter") {
-        event.preventDefault();
-        input.blur();
-      }
-    });
-
-    dramaList.addEventListener("dragstart", (event) => {
-      const row = event.target.closest(".drama");
-
-      if (!row) {
-        return;
-      }
-
-      draggedDramaId = row.dataset.id;
-      row.classList.add("dragging");
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", draggedDramaId);
-    });
-
-    dramaList.addEventListener("dragend", () => {
-      draggedDramaId = "";
-      document.querySelectorAll(".drama").forEach((row) => {
-        row.classList.remove("dragging", "drag-over");
-      });
-    });
-
-    dramaList.addEventListener("dragover", (event) => {
-      const row = event.target.closest(".drama");
-
-      if (!row || !draggedDramaId || row.dataset.id === draggedDramaId) {
-        return;
-      }
-
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-      document.querySelectorAll(".drama.drag-over").forEach((item) => {
-        item.classList.remove("drag-over");
-      });
-      row.classList.add("drag-over");
-    });
-
-    dramaList.addEventListener("dragleave", (event) => {
-      const row = event.target.closest(".drama");
-
-      if (!row || row.contains(event.relatedTarget)) {
-        return;
-      }
-
-      row.classList.remove("drag-over");
-    });
-
-    dramaList.addEventListener("drop", (event) => {
-      const row = event.target.closest(".drama");
-
-      if (!row || !draggedDramaId || row.dataset.id === draggedDramaId) {
-        return;
-      }
-
-      event.preventDefault();
-      reorderDrama(draggedDramaId, row.dataset.id);
-      draggedDramaId = "";
-      saveAndRender();
-    });
-
-    function loadDramas() {
+      const raw = JSON.stringify(normalized);
+      storage.setItem(STORAGE_KEY,raw);
+      return { dramas:normalized, raw };
+    }
+    function loadLibrary(storage) {
+      let raw = null;
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        const savedDramas = saved ? JSON.parse(saved) : [];
-        const mergedDramas = mergeInitialDramas(savedDramas);
-
-        if (mergedDramas.length !== savedDramas.length) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedDramas));
-        }
-
-        return mergedDramas;
+        raw = storage.getItem(STORAGE_KEY);
+        // An existing empty array is a saved library. Never merge starter titles into it.
+        if (raw !== null) return { dramas:normalizeDramas(JSON.parse(raw)), raw, error:"", blocked:false };
+        const now = new Date().toISOString();
+        const seeded = INITIAL_DRAMAS.map(([name,episodes]) => ({ id:createId(), name, episodes, status:"watching", updatedAt:now }));
+        const saved = saveLibrary(storage,seeded,null);
+        return { ...saved, error:"", blocked:false };
       } catch (error) {
-        return mergeInitialDramas([]);
+        return { dramas:[], raw, error:error.message, blocked:true };
       }
     }
-
-    function mergeInitialDramas(savedDramas) {
-      const existingNames = new Set(savedDramas.map((drama) => drama.name.toLowerCase()));
-      const createdAt = new Date().toISOString();
-      const newDramas = initialDramas
-        .filter((drama) => !existingNames.has(drama.name.toLowerCase()))
-        .map((drama) => ({
-          id: crypto.randomUUID ? crypto.randomUUID() : drama.name + "-" + Date.now(),
-          name: drama.name,
-          episodes: drama.episodes,
-          status: "watching",
-          updatedAt: createdAt
-        }));
-
-      return savedDramas.concat(newDramas);
+    function parseBackup(text) {
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) return normalizeDramas(data);
+      if (!data || data.app !== "Drama Tracker" || data.version !== 4) throw new Error("Choose a Drama Tracker v4 backup or a legacy library array.");
+      return normalizeDramas(data.dramas);
     }
-
-    function saveAndRender() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dramas));
-      const savedAt = new Date();
-      saveStatus.textContent = "Saved just now";
-      saveStatus.title = "Saved " + savedAt.toLocaleString();
-      render();
+    function serializeBackup(records) { return JSON.stringify({ app:"Drama Tracker", version:4, exportedAt:new Date().toISOString(), dramas:normalizeDramas(records) },null,2); }
+    function moveInStatus(records,id,direction) {
+      const next = records.slice();
+      const from = next.findIndex(item=>item.id===id);
+      if (from < 0) return next;
+      let to = from + direction;
+      while (to >= 0 && to < next.length && next[to].status !== next[from].status) to += direction;
+      if (to >= 0 && to < next.length) [next[from],next[to]] = [next[to],next[from]];
+      return next;
     }
-
-    function reorderDrama(sourceId, targetId) {
-      const activeDramas = dramas.filter((drama) => drama.status === activeTab);
-      const otherDramas = dramas.filter((drama) => drama.status !== activeTab);
-      const sourceIndex = activeDramas.findIndex((drama) => drama.id === sourceId);
-      const targetIndex = activeDramas.findIndex((drama) => drama.id === targetId);
-
-      if (sourceIndex < 0 || targetIndex < 0) {
-        return;
-      }
-
-      const [movedDrama] = activeDramas.splice(sourceIndex, 1);
-      const newTargetIndex = activeDramas.findIndex((drama) => drama.id === targetId);
-      activeDramas.splice(newTargetIndex, 0, movedDrama);
-      dramas = otherDramas.concat(activeDramas);
-    }
-
-    function render() {
-      document.querySelectorAll(".tab").forEach((tab) => {
-        const isActive = tab.dataset.tab === activeTab;
-        tab.classList.toggle("active", isActive);
-        tab.setAttribute("aria-pressed", String(isActive));
-      });
-
-      const watchingCount = countByStatus("watching");
-      const archivedCount = countByStatus("archived");
-      const completedCount = countByStatus("completed");
-
-      document.getElementById("totalCount").textContent = dramas.length;
-      document.getElementById("watchingCount").textContent = watchingCount;
-      document.getElementById("archivedCount").textContent = archivedCount;
-      document.getElementById("completedCount").textContent = completedCount;
-      document.getElementById("watchingTabCount").textContent = watchingCount;
-      document.getElementById("archivedTabCount").textContent = archivedCount;
-      document.getElementById("completedTabCount").textContent = completedCount;
-
-      const visibleDramas = dramas.filter((drama) => drama.status === activeTab);
-
-      if (visibleDramas.length === 0) {
-        dramaList.innerHTML = '<div class="empty"><strong>' + tabLabels[activeTab] + ' is clear</strong>' + emptyMessages[activeTab] + '</div>';
-        return;
-      }
-
-      dramaList.innerHTML = visibleDramas.map(renderDrama).join("");
-    }
-
-    function renderDrama(drama, index) {
-      const moveActions = tabs
-        .filter((status) => status !== drama.status)
-        .map((status) => {
-          const className = status === "archived" ? "archive" : status === "completed" ? "complete" : "";
-          const actionLabel = status === "archived" ? "Archive" : status === "completed" ? "Complete" : "Move to Watching";
-          return '<button class="small ' + className + '" type="button" data-action="move" data-status="' + status + '" data-id="' + drama.id + '" aria-label="Move ' + escapeHtml(drama.name) + ' to ' + tabLabels[status] + '">' + actionLabel + '</button>';
-        })
-        .join("");
-      const deleteAction = drama.status === "watching"
-        ? '<button class="small delete" type="button" data-action="delete" data-id="' + drama.id + '">Delete</button>'
-        : "";
-      const actions = moveActions + deleteAction;
-
-      return [
-        '<article class="drama ' + drama.status + '" draggable="true" data-id="' + drama.id + '">',
-          '<button class="drag-handle" type="button" aria-label="Drag to reorder ' + escapeHtml(drama.name) + '" title="Drag to reorder">::</button>',
-          '<div class="drama-main">',
-            '<div class="index-mark" aria-hidden="true">' + String(index + 1).padStart(2, "0") + '</div>',
-            '<div>',
-              '<div class="name">' + escapeHtml(drama.name) + '</div>',
-              '<div class="row-meta">',
-                '<span class="status-pill ' + drama.status + '">' + tabLabels[drama.status] + '</span>',
-                '<span class="meta">Updated ' + formatDate(drama.updatedAt) + '</span>',
-              '</div>',
-            '</div>',
-          '</div>',
-          '<div class="episode-stack">',
-            '<div class="episode-label">Episode</div>',
-            '<div class="episode-controls" aria-label="Episode controls for ' + escapeHtml(drama.name) + '">',
-              '<button class="episode-button" type="button" data-action="decrease" data-id="' + drama.id + '" aria-label="Decrease episode">-</button>',
-              '<input class="episode-input" type="number" min="0" inputmode="numeric" value="' + drama.episodes + '" data-action="set-episode" data-id="' + drama.id + '" aria-label="Episode number">',
-              '<button class="episode-button" type="button" data-action="increase" data-id="' + drama.id + '" aria-label="Increase episode">+</button>',
-            '</div>',
-          '</div>',
-          '<div class="actions">' + actions + '</div>',
-        '</article>'
-      ].join("");
-    }
-
-    function countByStatus(status) {
-      return dramas.filter((drama) => drama.status === status).length;
-    }
-
-    function formatDate(value) {
-      if (!value) {
-        return "just now";
-      }
-
-      return new Date(value).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      });
-    }
-
-    function escapeHtml(value) {
-      return value
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
+    function escapeHtml(value) { return String(value).replace(/[&<>"']/g, char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char])); }
+  </script>
+  <script id="tracker-ui">
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const storage = { getItem:key=>localStorage.getItem(key), setItem:(key,value)=>localStorage.setItem(key,value) };
+    let library = loadLibrary(storage);
+    let dramas = library.dramas;
+    let lastRaw = library.raw;
+    let activeTab = "watching";
+    let search = "";
+    let sort = "manual";
+    let lastDeleted = null;
+    let restoreCandidate = null;
+    let restoreBaseRaw = null;
+    let editingId = null;
+    let editBaseRaw = null;
+    let draggedId = null;
+    let toastTimer;
+    let theme = "auto";
+    try {
+      const view = JSON.parse(storage.getItem("drama-tracker-v4-view") || "{}");
+      if (Object.hasOwn(STATUS_LABELS,view.tab)) activeTab = view.tab;
+      if (["manual","updated","title","progress"].includes(view.sort)) sort = view.sort;
+      if (["auto","light","dark"].includes(view.theme)) theme = view.theme;
+      if (!library.blocked && lastRaw !== null && storage.getItem("drama-tracker-v4-upgrade-backup") === null) storage.setItem("drama-tracker-v4-upgrade-backup",lastRaw);
+    } catch { /* Preferences are optional; library write failures are reported separately. */ }
+    $("sortSelect").value = sort;
+    applyTheme();
+    showStorageState();
     render();
+    function showStorageState() {
+      $("recovery").hidden = !library.blocked;
+      $("recoveryMessage").textContent = "Your saved library could not be opened. The original data has been left untouched. Download it for recovery, or restore a valid backup. " + library.error;
+      $("recoveryBackup").hidden = library.raw === null;
+      $("saveStatus").classList.toggle("error",library.blocked);
+      $("saveStatus").textContent = library.blocked ? "Saving unavailable · recovery needed" : "Saved on this device";
+    }
+    function rememberView() { try { storage.setItem("drama-tracker-v4-view",JSON.stringify({tab:activeTab,sort,theme})); } catch { /* Optional view settings. */ } }
+    function applyTheme() {
+      if (theme === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = theme;
+      $("themeButton").textContent = "Theme: " + ({auto:"Auto",light:"Light",dark:"Dark"}[theme]);
+      $("themeButton").setAttribute("aria-label","Color theme: " + theme + ". Click to change");
+      const dark = theme === "dark" || theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches;
+      document.querySelector('meta[name="theme-color"]').content = dark ? "#121820" : "#f6f7fb";
+    }
+    function notify(message) {
+      clearTimeout(toastTimer);
+      $("toast").textContent = message; $("toast").hidden = false;
+      toastTimer = setTimeout(()=>$("toast").hidden=true,5500);
+    }
+    function syncFromStorage(message) {
+      library = loadLibrary(storage); dramas = library.dramas; lastRaw = library.raw;
+      lastDeleted = null; $("undoBar").hidden = true;
+      showStorageState(); render();
+      if (message) notify(message);
+    }
+    function commit(next,{rerender=true,recovery=false}={}) {
+      if (library.blocked && !recovery) { notify("Restore a valid backup before changing this library. Original data is untouched."); return false; }
+      try {
+        const saved = saveLibrary(storage,next,lastRaw);
+        dramas = saved.dramas; lastRaw = saved.raw; library = {...saved,error:"",blocked:false};
+        $("saveStatus").classList.remove("error"); $("saveStatus").textContent = "Saved just now";
+        $("saveStatus").title = new Date().toLocaleString(); $("recovery").hidden = true;
+        if (rerender) render();
+        return true;
+      } catch (error) {
+        if (error.code === "CONFLICT") syncFromStorage(error.message);
+        else { $("saveStatus").classList.add("error"); $("saveStatus").textContent = "Save failed · change not applied"; notify("Could not save. Your change was not applied. " + error.message); }
+        return false;
+      }
+    }
+    function visibleDramas() {
+      let visible = dramas.filter(item=>item.status===activeTab && (item.name+" "+item.notes).toLocaleLowerCase().includes(search));
+      if (sort === "title") visible.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+      if (sort === "updated") visible.sort((a,b)=>Date.parse(b.updatedAt)-Date.parse(a.updatedAt));
+      if (sort === "progress") visible.sort((a,b)=>b.episodes-a.episodes);
+      return visible;
+    }
+    function canReorder() { return sort === "manual" && !search; }
+    function render() {
+      const focused = document.activeElement;
+      const focusAction = focused?.dataset?.action; const focusId = focused?.dataset?.id;
+      for (const status of Object.keys(STATUS_LABELS)) {
+        const count = dramas.filter(item=>item.status===status).length;
+        $(status+"Count").textContent=count; $(status+"TabCount").textContent=count;
+      }
+      $("episodeCount").textContent=dramas.reduce((sum,item)=>sum+item.episodes,0).toLocaleString();
+      document.querySelectorAll("[data-tab]").forEach(button=>{ const active=button.dataset.tab===activeTab; button.classList.toggle("active",active); button.setAttribute("aria-pressed",String(active)); });
+      const visible=visibleDramas();
+      const total=dramas.filter(item=>item.status===activeTab).length;
+      $("resultInfo").textContent=(search ? visible.length+" of "+total : total)+" "+(total===1?"title":"titles")+" · "+(canReorder()?"Use arrows or drag to reorder":"Clear search and choose Your order to reorder");
+      $("clearSearch").hidden=!search;
+      $("libraryInfo").textContent=dramas.length+" titles · Saved in this browser · Back up to move devices";
+      $("dramaList").innerHTML=visible.length ? visible.map((item,index)=>renderDrama(item,index,visible.length)).join("") : '<div class="empty"><strong>'+ (search?"No matching dramas":STATUS_LABELS[activeTab]+" is clear")+'</strong>'+(search?"Try another title or note, or clear your search.":activeTab==="watching"?"Add a drama above and make time for your next episode.":activeTab==="archived"?"Archive a drama while you wait for its next season.":"Move a finished drama here to celebrate another story.")+"</div>";
+      if (focusAction && focusId) {
+        const replacement=Array.from($("dramaList").querySelectorAll("[data-action]")).find(element=>element.dataset.action===focusAction && element.dataset.id===focusId);
+        if (replacement && !replacement.disabled) replacement.focus({preventScroll:true});
+      }
+    }
+    function renderDrama(item,index,count) {
+      const id=escapeHtml(item.id),name=escapeHtml(item.name), reorder=canReorder();
+      const action=(key,label,extra="",className="")=>'<button type="button" class="'+className+'" data-action="'+key+'" data-id="'+id+'" '+extra+'>'+label+'</button>';
+      const moves=Object.keys(STATUS_LABELS).filter(status=>status!==item.status).map(status=>action("move",status==="watching"?"Watch again":status==="archived"?"Archive":"Complete",'data-status="'+status+'" aria-label="Move '+name+' to '+STATUS_LABELS[status]+'"',status==="archived"?"archive":status==="completed"?"complete":"")).join("");
+      const date=new Date(item.updatedAt).getTime()>0 ? new Date(item.updatedAt).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}) : "earlier";
+      const total=item.totalEpisodes;
+      return '<article class="drama '+item.status+'" draggable="'+reorder+'" data-id="'+id+'" aria-label="'+name+'">'+
+        '<div class="order"><span class="index">'+String(index+1).padStart(2,"0")+'</span><div class="order-buttons">'+action("up","↑",'aria-label="Move '+name+' up" '+(!reorder||index===0?'disabled':""))+action("down","↓",'aria-label="Move '+name+' down" '+(!reorder||index===count-1?'disabled':""))+'</div></div>'+
+        '<div class="details"><h2 class="name">'+name+'</h2><div class="row-meta"><span class="badge">'+STATUS_LABELS[item.status]+'</span><span>Updated '+date+'</span></div>'+
+        (item.notes?'<p class="notes">'+escapeHtml(item.notes)+'</p>':"")+(item.url?'<a class="watch-link" href="'+escapeHtml(item.url)+'" target="_blank" rel="noopener noreferrer">Open watch link ↗</a>':"")+
+        '<div class="actions">'+action("edit","Edit",'aria-label="Edit '+name+'"')+moves+action("delete","Delete",'aria-label="Delete '+name+'"',"delete")+'</div></div>'+
+        '<div class="episode-stack"><label class="episode-label" for="episode-'+id+'">Current episode</label><div class="episode-controls">'+action("decrease","−",'aria-label="Decrease episode for '+name+'" '+(item.episodes===0?'disabled':""))+
+        '<input id="episode-'+id+'" type="number" min="0" max="'+(total??MAX_EPISODES)+'" step="1" inputmode="numeric" value="'+item.episodes+'" data-action="episode" data-id="'+id+'" aria-label="Current episode for '+name+'">'+action("increase","+",'aria-label="Increase episode for '+name+'" '+(item.episodes===(total??MAX_EPISODES)?'disabled':""))+'</div>'+
+        '<div class="progress-info">'+(total?'of '+total+' episodes · '+Math.round(item.episodes/total*100)+'%':"Set a total in Edit to track progress")+'</div>'+(total?'<progress max="'+total+'" value="'+item.episodes+'" aria-label="Progress for '+name+'"></progress>':"")+'</div></article>';
+    }
+    $("dramaName").addEventListener("input",()=>$("addButton").disabled=!$("dramaName").value.trim());
+    $("addForm").addEventListener("submit",event=>{
+      event.preventDefault(); const name=$("dramaName").value.trim(); if (!name) return;
+      const duplicate=dramas.find(item=>item.name.toLocaleLowerCase()===name.toLocaleLowerCase());
+      if (duplicate) { activeTab=duplicate.status; search=""; $("searchInput").value=""; render(); rememberView(); notify("That title is already in "+STATUS_LABELS[duplicate.status]+". Use Edit for another season name."); return; }
+      const next=[{id:createId(),name,episodes:0,status:"watching",updatedAt:new Date().toISOString()},...dramas];
+      const previous=activeTab; activeTab="watching";
+      if (commit(next)) { $("dramaName").value=""; $("addButton").disabled=true; search=""; $("searchInput").value=""; rememberView(); render(); notify("Added "+name); } else { activeTab=previous; render(); }
+    });
+    document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener("click",()=>{activeTab=button.dataset.tab; rememberView(); render();}));
+    document.querySelector(".tabs").addEventListener("keydown",event=>{
+      if (!["ArrowLeft","ArrowRight","Home","End"].includes(event.key)) return;
+      const buttons=Array.from(document.querySelectorAll("[data-tab]")); const current=buttons.indexOf(event.target); if(current<0)return;
+      event.preventDefault(); const next=event.key==="Home"?0:event.key==="End"?2:(current+(event.key==="ArrowRight"?1:2))%3; buttons[next].click(); buttons[next].focus();
+    });
+    $("searchInput").addEventListener("input",()=>{search=$("searchInput").value.trim().toLocaleLowerCase();render();});
+    $("clearSearch").addEventListener("click",()=>{search="";$("searchInput").value="";render();$("searchInput").focus();});
+    $("sortSelect").addEventListener("change",()=>{sort=$("sortSelect").value;rememberView();render();});
+    $("themeButton").addEventListener("click",()=>{theme=({auto:"light",light:"dark",dark:"auto"})[theme];applyTheme();rememberView();});
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme);
+    $("dramaList").addEventListener("click",event=>{
+      const button=event.target.closest("button[data-action]"); if(!button)return;
+      const item=dramas.find(record=>record.id===button.dataset.id); if(!item)return;
+      const action=button.dataset.action;
+      if(action==="edit") { openEditor(item); return; }
+      if(action==="delete") {
+        const index=dramas.indexOf(item);
+        if(commit(dramas.filter(record=>record.id!==item.id))) { lastDeleted={item,index}; $("undoText").textContent="Deleted “"+item.name+"”.";$("undoBar").hidden=false;$("undoButton").focus({preventScroll:true}); }
+        return;
+      }
+      if(action==="up" || action==="down") { if(canReorder() && commit(moveInStatus(dramas,item.id,action==="up"?-1:1)))notify("Order saved");return; }
+      let updated={...item,updatedAt:new Date().toISOString()};
+      if(action==="increase")updated.episodes=Math.min(item.totalEpisodes??MAX_EPISODES,item.episodes+1);
+      if(action==="decrease")updated.episodes=Math.max(0,item.episodes-1);
+      if(action==="move")updated.status=button.dataset.status;
+      if(commit(dramas.map(record=>record.id===item.id?updated:record))) { if(action==="move")notify("Moved “"+item.name+"” to "+STATUS_LABELS[updated.status]); }
+    });
+    function saveEpisode(input) {
+      const item=dramas.find(record=>record.id===input.dataset.id); if(!item)return false;
+      let episodes;
+      try { episodes=episodeNumber(input.value); if(item.totalEpisodes!==null && episodes>item.totalEpisodes)throw new Error("Current episode cannot exceed total episodes. Change the total in Edit."); } catch(error) { notify(error.message);return false; }
+      if(episodes===item.episodes)return true;
+      const updated={...item,episodes,updatedAt:new Date().toISOString()};
+      if(!commit(dramas.map(record=>record.id===item.id?updated:record),{rerender:false}))return false;
+      // Keep the input and surrounding buttons in place while typing or tapping another action.
+      const row=input.closest(".drama");
+      row.querySelector('[data-action="decrease"]').disabled=episodes===0;
+      row.querySelector('[data-action="increase"]').disabled=episodes===(item.totalEpisodes??MAX_EPISODES);
+      row.querySelector(".progress-info").textContent=item.totalEpisodes?"of "+item.totalEpisodes+" episodes · "+Math.round(episodes/item.totalEpisodes*100)+"%":"Set a total in Edit to track progress";
+      if(row.querySelector("progress"))row.querySelector("progress").value=episodes;
+      row.querySelector(".row-meta span:last-child").textContent="Updated "+new Date(updated.updatedAt).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+      $("episodeCount").textContent=dramas.reduce((sum,record)=>sum+record.episodes,0).toLocaleString();
+      return true;
+    }
+    $("dramaList").addEventListener("input",event=>{const input=event.target.closest('input[data-action="episode"]');if(input && input.value!=="" && input.validity.valid)saveEpisode(input);});
+    $("dramaList").addEventListener("change",event=>{const input=event.target.closest('input[data-action="episode"]');if(input && !saveEpisode(input)){const item=dramas.find(record=>record.id===input.dataset.id);if(item)input.value=item.episodes;}});
+    $("dramaList").addEventListener("keydown",event=>{if(event.key==="Enter" && event.target.matches('input[data-action="episode"]')){event.preventDefault();event.target.blur();render();}});
+    $("dramaList").addEventListener("focusout",event=>{if(event.target.matches('input[data-action="episode"]') && event.relatedTarget && !$("dramaList").contains(event.relatedTarget))render();});
+    $("undoButton").addEventListener("click",()=>{
+      if(!lastDeleted)return;
+      if(dramas.some(item=>item.id===lastDeleted.item.id || item.name.toLocaleLowerCase()===lastDeleted.item.name.toLocaleLowerCase())){notify("A drama with this title already exists. Rename it before undoing this deletion.");return;}
+      const next=dramas.slice();next.splice(Math.min(lastDeleted.index,next.length),0,lastDeleted.item);
+      if(commit(next)){lastDeleted=null;$("undoBar").hidden=true;$("dramaList").focus({preventScroll:true});notify("Drama restored");}
+    });
+    function openEditor(item) {
+      editingId=item.id;editBaseRaw=lastRaw;
+      $("editName").value=item.name;$("editEpisodes").value=item.episodes;$("editTotal").value=item.totalEpisodes??"";$("editStatus").value=item.status;$("editNotes").value=item.notes;$("editUrl").value=item.url;$("editError").hidden=true;$("editDialog").showModal();
+    }
+    $("editForm").addEventListener("submit",event=>{
+      event.preventDefault();
+      try {
+        if(editBaseRaw!==lastRaw)throw new Error("The library changed while you were editing. Close and reopen this editor to use the latest version.");
+        const item=dramas.find(record=>record.id===editingId);if(!item)throw new Error("This drama no longer exists.");
+        const updated=normalizeDramas([{...item,name:$("editName").value,episodes:$("editEpisodes").value,totalEpisodes:$("editTotal").value,status:$("editStatus").value,notes:$("editNotes").value,url:$("editUrl").value.trim(),updatedAt:new Date().toISOString()}])[0];
+        if(dramas.some(record=>record.id!==item.id && record.name.toLocaleLowerCase()===updated.name.toLocaleLowerCase()))throw new Error("Another drama already has that title. Use a season number to distinguish it.");
+        if(commit(dramas.map(record=>record.id===item.id?updated:record))){$("editDialog").close();notify("Changes saved");}
+      }catch(error){$("editError").textContent=error.message;$("editError").hidden=false;}
+    });
+    function download(text,filename,type="application/json") {
+      const url=URL.createObjectURL(new Blob([text],{type}));const link=document.createElement("a");link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+    }
+    function backup() {
+      if(library.blocked){if(library.raw!==null)download(library.raw,"drama-tracker-original-data.txt","text/plain");else notify("No saved data is available to download.");return;}
+      download(serializeBackup(dramas),"drama-tracker-v4-"+new Date().toISOString().slice(0,10)+".json");notify("Backup download started. Keep it in Files or iCloud Drive.");
+    }
+    $("backupButton").addEventListener("click",backup);$("restoreBackupButton").addEventListener("click",backup);$("recoveryBackup").addEventListener("click",backup);
+    $("restoreButton").addEventListener("click",()=>$("restoreFile").click());
+    $("restoreFile").addEventListener("change",async()=>{
+      const file=$("restoreFile").files[0];if(!file)return;
+      try{
+        if(file.size>5*1024*1024)throw new Error("Choose a backup smaller than 5 MB.");
+        restoreCandidate=parseBackup(await file.text());restoreBaseRaw=lastRaw;
+        $("restorePreview").textContent=restoreCandidate.length+" titles in “"+file.name+"”. Your current "+dramas.length+" titles will be replaced, including their order and progress.";
+        $("restoreError").hidden=true;$("restoreDialog").showModal();
+      }catch(error){restoreCandidate=null;notify("Backup was not imported. "+error.message);}finally{$("restoreFile").value="";}
+    });
+    $("confirmRestore").addEventListener("click",()=>{
+      if(!restoreCandidate)return;
+      if(restoreBaseRaw!==lastRaw){$("restoreError").textContent="The library changed after you selected this backup. Cancel and select it again.";$("restoreError").hidden=false;return;}
+      if(commit(restoreCandidate,{recovery:true})){restoreCandidate=null;lastDeleted=null;$("undoBar").hidden=true;search="";$("searchInput").value="";activeTab="watching";rememberView();render();$("restoreDialog").close();notify("Backup restored and saved");}
+    });
+    document.querySelectorAll("[data-close]").forEach(button=>button.addEventListener("click",()=>$(button.dataset.close).close()));
+    $("restoreDialog").addEventListener("close",()=>restoreCandidate=null);
+    $("helpButton").addEventListener("click",()=>$("helpDialog").showModal());
+    $("dramaList").addEventListener("dragstart",event=>{
+      const row=event.target.closest(".drama");if(!row||!canReorder()||event.target.closest("input,button,a")){event.preventDefault();return;}
+      draggedId=row.dataset.id;row.classList.add("dragging");event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",draggedId);
+    });
+    $("dramaList").addEventListener("dragover",event=>{const row=event.target.closest(".drama");if(row&&draggedId&&row.dataset.id!==draggedId){event.preventDefault();row.classList.add("drag-over");}});
+    $("dramaList").addEventListener("dragleave",event=>{const row=event.target.closest(".drama");if(row&&!row.contains(event.relatedTarget))row.classList.remove("drag-over");});
+    $("dramaList").addEventListener("drop",event=>{
+      event.preventDefault();const row=event.target.closest(".drama");if(!row||!draggedId||!canReorder())return;
+      const next=dramas.slice(),from=next.findIndex(item=>item.id===draggedId),to=next.findIndex(item=>item.id===row.dataset.id);
+      if(from>=0&&to>=0&&from!==to){const [moved]=next.splice(from,1);next.splice(to,0,moved);if(commit(next))notify("Order saved");}draggedId=null;
+    });
+    $("dramaList").addEventListener("dragend",()=>{draggedId=null;document.querySelectorAll(".dragging,.drag-over").forEach(row=>row.classList.remove("dragging","drag-over"));});
+    window.addEventListener("storage",event=>{if(event.key===STORAGE_KEY||event.key===null)syncFromStorage("Library updated from another tab");});
+    window.addEventListener("pageshow",event=>{if(event.persisted){try{if(storage.getItem(STORAGE_KEY)!==lastRaw)syncFromStorage("Library refreshed");}catch{syncFromStorage();}}});
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){try{if(storage.getItem(STORAGE_KEY)!==lastRaw)syncFromStorage("Library refreshed");}catch{syncFromStorage();}}});
   </script>
 </body>
 </html>

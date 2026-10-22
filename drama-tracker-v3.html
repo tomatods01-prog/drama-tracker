@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7fb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Drama Tracker">
+  <meta name="description" content="Your dramas, your pace. Track episodes and keep a backup of your library.">
+  <title>Drama Tracker v4</title>
+  <style>
+    :root { color-scheme: light; --bg:#f6f7fb; --paper:#fff; --ink:#17212f; --muted:#657083; --line:#e4e8ef; --accent:#df583f; --accent-soft:#fff0ec; --blue:#2563eb; --blue-soft:#edf3ff; --green:#147b56; --green-soft:#ebf8f1; --amber:#986208; --amber-soft:#fff7e7; --red:#b42318; --shadow:0 10px 36px #17212f08; }
+    :root[data-theme="dark"] { color-scheme:dark; --bg:#121820; --paper:#1b2430; --ink:#f1f4f8; --muted:#a4b0c2; --line:#344050; --accent:#ff9a81; --accent-soft:#392a28; --blue:#9bbaff; --blue-soft:#25344e; --green:#89dcb5; --green-soft:#233b32; --amber:#efd08a; --amber-soft:#3b3425; --red:#ffaaa0; --shadow:0 10px 36px #0002; }
+    @media(prefers-color-scheme:dark) { :root:not([data-theme="light"]) { color-scheme:dark; --bg:#121820; --paper:#1b2430; --ink:#f1f4f8; --muted:#a4b0c2; --line:#344050; --accent:#ff9a81; --accent-soft:#392a28; --blue:#9bbaff; --blue-soft:#25344e; --green:#89dcb5; --green-soft:#233b32; --amber:#efd08a; --amber-soft:#3b3425; --red:#ffaaa0; --shadow:0 10px 36px #0002; } }
+    * { box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; line-height:1.5; -webkit-text-size-adjust:100%; }
+    button,input,select,textarea { font:inherit; }
+    button,select,a { -webkit-tap-highlight-color:transparent; }
+    button { cursor:pointer; }
+    button,input,select,textarea { border:1px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); }
+    button { min-height:44px; padding:9px 14px; font-size:13px; font-weight:650; touch-action:manipulation; }
+    button:hover { border-color:var(--muted); }
+    button:active { transform:translateY(1px); }
+    button:disabled { opacity:.4; cursor:default; transform:none; }
+    input,select,textarea { min-height:46px; padding:10px 12px; min-width:0; width:100%; font-size:16px; }
+    textarea { resize:vertical; }
+    :focus-visible { outline:3px solid var(--blue); outline-offset:3px; }
+    a { color:var(--blue); text-underline-offset:3px; }
+    h1,h2,p { margin:0; }
+    .app { max-width:1160px; margin:auto; padding:36px max(24px,env(safe-area-inset-right)) max(32px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; margin-bottom:28px; }
+    .eyebrow { color:var(--accent); font-size:11px; font-weight:800; letter-spacing:.14em; margin-bottom:8px; }
+    h1 { font-size:clamp(28px,4vw,38px); letter-spacing:-.04em; line-height:1.2; }
+    .version { display:inline-block; vertical-align:middle; margin-left:8px; padding:3px 7px; border:1px solid var(--line); border-radius:6px; font-size:11px; letter-spacing:0; color:var(--muted); }
+    .subtitle { color:var(--muted); font-size:14px; margin-top:9px; }
+    .header-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; padding-top:5px; }
+    .save-status { width:100%; text-align:right; color:var(--green); font-size:12px; }
+    .save-status.error { color:var(--red); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+    .stat { border:1px solid var(--line); border-radius:14px; padding:16px 20px; background:var(--paper); box-shadow:var(--shadow); }
+    .stat strong { font-size:26px; line-height:1.2; display:block; font-variant-numeric:tabular-nums; letter-spacing:-.04em; }
+    .stat span { color:var(--muted); font-size:12px; }
+    .stat.watching strong { color:var(--blue); } .stat.completed strong { color:var(--green); }
+    .workspace { background:var(--paper); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:clip; }
+    .toolbar { padding:18px 22px; border-bottom:1px solid var(--line); }
+    .tabs { display:flex; gap:5px; padding:4px; background:var(--bg); border-radius:12px; width:max-content; max-width:100%; margin-bottom:18px; }
+    .tab { background:transparent; border:1px solid transparent; color:var(--muted); padding:9px 14px; white-space:nowrap; }
+    .tab.active { background:var(--paper); border-color:var(--line); color:var(--ink); box-shadow:0 2px 5px #17212f06; }
+    .count { font-size:11px; margin-left:5px; background:var(--line); border-radius:5px; padding:2px 5px; font-variant-numeric:tabular-nums; }
+    .add-form { display:flex; gap:8px; }
+    .primary { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+    .primary:hover { opacity:.9; }
+    .tools { display:grid; grid-template-columns:minmax(180px,1fr) 170px auto; gap:10px; align-items:center; margin-top:12px; }
+    .result-info { color:var(--muted); font-size:12px; margin-top:12px; min-height:18px; }
+    .list { padding:0 22px; outline-offset:-3px; }
+    .drama { display:grid; grid-template-columns:42px minmax(0,1fr) 176px; gap:18px; padding:24px 0; border-bottom:1px solid var(--line); align-items:start; }
+    .drama:last-child { border-bottom:0; }
+    .order { display:grid; gap:4px; justify-items:center; padding-top:2px; }
+    .index { color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; font-weight:650; }
+    .order-buttons { display:flex; flex-direction:column; gap:4px; }
+    .order-buttons button { width:34px; padding:0; min-height:32px; color:var(--muted); }
+    .name { font-size:19px; font-weight:720; line-height:1.4; letter-spacing:-.025em; overflow-wrap:anywhere; }
+    .row-meta { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:7px; color:var(--muted); font-size:11px; }
+    .badge { padding:3px 7px; border-radius:5px; color:var(--blue); background:var(--blue-soft); font-weight:650; }
+    .archived .badge { color:var(--amber); background:var(--amber-soft); }
+    .completed .badge { color:var(--green); background:var(--green-soft); }
+    .notes { font-size:13px; color:var(--muted); margin-top:10px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .watch-link { display:inline-block; margin-top:8px; font-size:12px; }
+    .actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:13px; }
+    .actions button { min-height:36px; padding:6px 10px; font-size:12px; }
+    .actions .complete { color:var(--green); } .actions .archive { color:var(--amber); } .actions .delete { color:var(--red); }
+    .episode-label { display:block; color:var(--muted); font-size:11px; text-align:center; margin-bottom:7px; }
+    .episode-controls { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; border:1px solid var(--line); border-radius:11px; overflow:hidden; }
+    .episode-controls button { border:0; border-radius:0; font-size:20px; padding:4px; min-height:46px; background:var(--bg); }
+    .episode-controls input { text-align:center; border:0; border-radius:0; padding:6px 0; width:100%; appearance:textfield; font-weight:700; font-variant-numeric:tabular-nums; }
+    input::-webkit-inner-spin-button,input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    .episode-controls :focus-visible { outline-offset:-3px; }
+    .progress-info { text-align:center; color:var(--muted); font-size:11px; margin-top:7px; font-variant-numeric:tabular-nums; }
+    progress { display:block; width:100%; height:5px; margin-top:9px; border:0; border-radius:9px; accent-color:var(--blue); overflow:hidden; background:var(--line); }
+    progress::-webkit-progress-bar { background:var(--line); } progress::-webkit-progress-value { background:var(--blue); border-radius:9px; }
+    .dragging { opacity:.5; } .drag-over { box-shadow:inset 0 3px var(--blue); }
+    .empty { padding:48px 20px; text-align:center; color:var(--muted); font-size:14px; }
+    .empty strong { display:block; color:var(--ink); font-size:20px; margin-bottom:8px; }
+    .notice { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border:1px solid var(--line); border-radius:12px; background:var(--paper); margin-bottom:16px; font-size:13px; overflow-wrap:anywhere; }
+    .recovery { border-color:var(--red); color:var(--red); align-items:flex-start; }
+    .recovery p { margin-bottom:8px; }
+    .footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; color:var(--muted); font-size:12px; padding:20px 2px 0; }
+    .footer button { border:0; background:transparent; padding:0; min-height:24px; font-size:12px; color:var(--muted); }
+    dialog { color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:24px; width:min(500px,calc(100% - 28px)); max-height:85dvh; overflow:auto; box-shadow:0 30px 100px #0004; }
+    dialog::backdrop { background:#10182680; backdrop-filter:blur(3px); }
+    dialog h2 { font-size:23px; letter-spacing:-.03em; margin-bottom:5px; }
+    .dialog-description { color:var(--muted); font-size:13px; margin-bottom:18px; }
+    .field { display:block; font-size:12px; font-weight:650; margin-top:14px; }
+    .field input,.field select,.field textarea { margin-top:6px; font-weight:400; }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .dialog-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:22px; }
+    .form-error { font-size:13px; color:var(--red); margin-top:12px; }
+    .toast { position:fixed; bottom:max(20px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); z-index:10; width:max-content; max-width:calc(100% - 32px); border:1px solid var(--line); border-radius:12px; background:var(--ink); color:var(--paper); padding:12px 18px; font-size:13px; box-shadow:var(--shadow); pointer-events:none; }
+    .help-text { font-size:14px; color:var(--muted); } .help-text p { margin-top:14px; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media(max-width:700px) {
+      .app { padding-top:max(24px,env(safe-area-inset-top)); padding-left:max(16px,env(safe-area-inset-left)); padding-right:max(16px,env(safe-area-inset-right)); }
+      .header { display:block; margin-bottom:20px; } .header-actions { justify-content:flex-start; margin-top:16px; } .save-status { text-align:left; margin-top:3px; }
+      .stats { gap:8px; margin-bottom:16px; } .stat { padding:12px; border-radius:12px; } .stat strong { font-size:23px; } .stat span { font-size:10px; }
+      .toolbar { padding:14px; } .tabs { width:100%; gap:2px; } .tab { flex:1; font-size:12px; padding:9px 4px; } .count { margin-left:3px; padding:2px 4px; }
+      .tools { grid-template-columns:minmax(0,1fr) 135px; } .clear-search { display:none; }
+      .list { padding:0 14px; } .drama { grid-template-columns:36px minmax(0,1fr); gap:8px 12px; padding:20px 0; }
+      .order { grid-column:1; grid-row:1; } .order-buttons { gap:5px; } .order-buttons button { min-height:44px; width:36px; }
+      .details { grid-column:2; grid-row:1; } .name { font-size:19px; }
+      .episode-stack { grid-column:2; width:100%; margin-top:5px; } .episode-label { text-align:left; } .episode-controls { grid-template-columns:52px minmax(0,1fr) 52px; }
+      .episode-controls button { min-height:48px; } .actions { gap:6px; } .actions button { min-height:44px; padding:7px 10px; }
+      .footer { display:block; } .footer button { margin-top:10px; } .subtitle { max-width:310px; }
+    }
+    @media(prefers-reduced-motion:no-preference) { button { transition:border-color .15s,background .15s; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div><div class="eyebrow">YOUR WATCHLIST, AT YOUR PACE</div><h1>Drama Tracker <span class="version">v4</span></h1><p class="subtitle">Pick up exactly where you left off.</p></div>
+      <div class="header-actions">
+        <button id="backupButton" type="button">Backup JSON</button>
+        <button id="restoreButton" type="button">Restore</button>
+        <button id="themeButton" type="button" aria-label="Color theme: system. Click to change">Theme: Auto</button>
+        <div class="save-status" id="saveStatus" role="status" aria-live="polite">Saved on this device</div>
+      </div>
+    </header>
+    <div id="recovery" class="notice recovery" role="alert" hidden><div><p id="recoveryMessage"></p><button id="recoveryBackup" type="button">Download original data</button></div></div>
+    <section class="stats" aria-label="Your library at a glance">
+      <div class="stat watching"><strong id="watchingCount">0</strong><span>Watching</span></div>
+      <div class="stat"><strong id="archivedCount">0</strong><span>Archived</span></div>
+      <div class="stat completed"><strong id="completedCount">0</strong><span>Completed</span></div>
+      <div class="stat"><strong id="episodeCount">0</strong><span>Episodes tracked</span></div>
+    </section>
+    <div class="notice" id="undoBar" hidden><span id="undoText"></span><button id="undoButton" type="button">Undo delete</button></div>
+    <section class="workspace" aria-label="Drama library">
+      <div class="toolbar">
+        <nav class="tabs" aria-label="Drama status">
+          <button class="tab active" data-tab="watching" type="button" aria-pressed="true">Watching <span class="count" id="watchingTabCount">0</span></button>
+          <button class="tab" data-tab="archived" type="button" aria-pressed="false">Archived <span class="count" id="archivedTabCount">0</span></button>
+          <button class="tab" data-tab="completed" type="button" aria-pressed="false">Completed <span class="count" id="completedTabCount">0</span></button>
+        </nav>
+        <form id="addForm" class="add-form" aria-label="Add a drama"><label for="dramaName" class="sr-only">New drama title</label><input id="dramaName" placeholder="Add a drama or a new season…" maxlength="120" required autocomplete="off"><button class="primary" id="addButton" type="submit" disabled>Add</button></form>
+        <div class="tools"><label class="sr-only" for="searchInput">Search current list</label><input type="search" id="searchInput" placeholder="Search titles or notes…" autocomplete="off"><label class="sr-only" for="sortSelect">Sort dramas</label><select id="sortSelect"><option value="manual">Your order</option><option value="updated">Recently updated</option><option value="title">Title A–Z</option><option value="progress">Most episodes</option></select><button class="clear-search" id="clearSearch" type="button" hidden>Clear search</button></div>
+        <p class="result-info" id="resultInfo" aria-live="polite"></p>
+      </div>
+      <section class="list" id="dramaList" aria-label="Dramas" tabindex="-1"></section>
+    </section>
+    <footer class="footer"><span id="libraryInfo">Your library stays in this browser. Back up to move devices.</span><button id="helpButton" type="button">iPhone &amp; data help ↗</button></footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <input type="file" id="restoreFile" accept="application/json,.json" hidden>
+  <dialog id="editDialog" aria-labelledby="editHeading">
+    <form id="editForm"><h2 id="editHeading">Edit drama</h2><p class="dialog-description">Keep the details that help you return.</p>
+      <label class="field">Title<input id="editName" maxlength="120" required></label>
+      <div class="field-row"><label class="field">Current episode<input id="editEpisodes" type="number" inputmode="numeric" min="0" max="999999" step="1" required></label><label class="field">Total episodes (optional)<input id="editTotal" type="number" inputmode="numeric" min="1" max="999999" step="1" placeholder="Unknown"></label></div>
+      <label class="field">Status<select id="editStatus"><option value="watching">Watching</option><option value="archived">Archived · waiting for next season</option><option value="completed">Completed</option></select></label>
+      <label class="field">Notes<textarea id="editNotes" rows="3" maxlength="2000" placeholder="Next season, a reminder, or where you stopped…"></textarea></label>
+      <label class="field">Watch link (optional)<input id="editUrl" type="url" maxlength="2000" placeholder="https://…"></label>
+      <p class="form-error" id="editError" role="alert" hidden></p><div class="dialog-actions"><button data-close="editDialog" type="button">Cancel</button><button class="primary" type="submit">Save changes</button></div>
+    </form>
+  </dialog>
+  <dialog id="restoreDialog" aria-labelledby="restoreHeading"><h2 id="restoreHeading">Restore a backup</h2><p class="dialog-description" id="restorePreview"></p><p class="help-text">This replaces this browser’s library. Download a backup of your current list before continuing.</p><p id="restoreError" class="form-error" role="alert" hidden></p><div class="dialog-actions"><button data-close="restoreDialog" type="button">Cancel</button><button id="restoreBackupButton" type="button">Back up current</button><button id="confirmRestore" class="primary" type="button">Replace library</button></div></dialog>
+  <dialog id="helpDialog" aria-labelledby="helpHeading"><h2 id="helpHeading">A little help</h2><div class="help-text"><p><strong>On iPhone:</strong> open your GitHub Pages website in Safari. Use Share (or More → Share), then Add to Home Screen. Turn on Open as Web App if shown.</p><p><strong>Your data:</strong> changes save on this device, in this browser. There is no account or automatic sync. Use Backup JSON, keep the file in Files or iCloud Drive, then Restore on another device.</p><p><strong>Upgrading from v3:</strong> your saved library carries over on the same site and browser. Starter titles are added only on the first visit. A title v3 already brought back needs deleting once in v4.</p><p><strong>Reordering:</strong> choose Your order and clear search. Use the up/down arrows on iPhone, or drag a row on desktop.</p><p><strong>Refreshing v4:</strong> reload your existing website. If an old bookmark ends in drama-tracker-v3.html, upload the updated file with that name too. Keep a backup before changing browsers or Home Screen installations.</p></div><div class="dialog-actions"><button data-close="helpDialog" type="button">Done</button></div></dialog>
+  <script id="tracker-core">
+    "use strict";
+    const STORAGE_KEY = "drama-tracker-v1";
+    const STATUS_LABELS = { watching:"Watching", archived:"Archived", completed:"Completed" };
+    const MAX_EPISODES = 999999;
+    const INITIAL_DRAMAS = [
+      ["摄影机不要停",0],["吞噬星空",219],["仙逆",142],["繁花",0],["山花烂漫时",0],
+      ["Tour de France",0],["沧元图第一季",26],["一人之下 4",0],["镖人",15],["伍六七之玄武国",0],
+      ["时光代理人 1",11],["武动乾坤 3",12],["雪鹰领主 3",78],["雾山五行 2",7],["一念永恒",106],
+      ["星辰变 4",80],["斩神 1",15],["Demon Slayer: infinite",0],["庆余年 2",0]
+    ];
+    function createId() { return globalThis.crypto?.randomUUID?.() || "drama-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2); }
+    function episodeNumber(value, minimum=0) {
+      if ((typeof value !== "number" && typeof value !== "string") || String(value).trim() === "") throw new Error("Enter a whole episode number.");
+      const number = Number(value);
+      if (!Number.isSafeInteger(number) || number < minimum || number > MAX_EPISODES) throw new Error("Episodes must be whole numbers from " + minimum + " to " + MAX_EPISODES + ".");
+      return number;
+    }
+    function safeWatchUrl(value) {
+      if (!value) return "";
+      if (typeof value !== "string" || value.length > 2000) throw new Error("The watch link is invalid.");
+      let url;
+      try { url = new URL(value); } catch { throw new Error("Use a full watch link starting with https:// or http://."); }
+      if (!["https:","http:"].includes(url.protocol)) throw new Error("Use a watch link starting with https:// or http://.");
+      return url.href;
+    }
+    function normalizeDramas(records) {
+      if (!Array.isArray(records)) throw new Error("The library must be a list of dramas.");
+      const ids = new Set();
+      return records.map((item,index) => {
+        if (!item || typeof item !== "object" || typeof item.name !== "string" || !item.name.trim() || item.name.trim().length > 120) throw new Error("Drama " + (index+1) + " needs a title of 1–120 characters.");
+        if (!Object.hasOwn(STATUS_LABELS,item.status)) throw new Error("Drama " + (index+1) + " has an invalid status.");
+        let id = typeof item.id === "string" && item.id ? item.id : createId();
+        if (ids.has(id)) id = createId();
+        ids.add(id);
+        const episodes = episodeNumber(item.episodes);
+        const totalEpisodes = item.totalEpisodes == null || item.totalEpisodes === "" ? null : episodeNumber(item.totalEpisodes,1);
+        if (totalEpisodes !== null && episodes > totalEpisodes) throw new Error("Current episode cannot exceed total episodes for " + item.name + ".");
+        if (item.notes != null && (typeof item.notes !== "string" || item.notes.length > 2000)) throw new Error("Notes must be text of at most 2,000 characters.");
+        const updatedAt = typeof item.updatedAt === "string" && Number.isFinite(Date.parse(item.updatedAt)) ? item.updatedAt : new Date(0).toISOString();
+        return { id, name:item.name.trim(), episodes, status:item.status, updatedAt, totalEpisodes, notes:item.notes || "", url:safeWatchUrl(item.url) };
+      });
+    }
+    function saveLibrary(storage,records,expectedRaw) {
+      const normalized = normalizeDramas(records);
+      if (storage.getItem(STORAGE_KEY) !== expectedRaw) {
+        const error = new Error("Your library changed in another tab. Review the latest list and try again.");
+        error.code = "CONFLICT";
+        throw error;
+      }
+      const raw = JSON.stringify(normalized);
+      storage.setItem(STORAGE_KEY,raw);
+      return { dramas:normalized, raw };
+    }
+    function loadLibrary(storage) {
+      let raw = null;
+      try {
+        raw = storage.getItem(STORAGE_KEY);
+        // An existing empty array is a saved library. Never merge starter titles into it.
+        if (raw !== null) return { dramas:normalizeDramas(JSON.parse(raw)), raw, error:"", blocked:false };
+        const now = new Date().toISOString();
+        const seeded = INITIAL_DRAMAS.map(([name,episodes]) => ({ id:createId(), name, episodes, status:"watching", updatedAt:now }));
+        const saved = saveLibrary(storage,seeded,null);
+        return { ...saved, error:"", blocked:false };
+      } catch (error) {
+        return { dramas:[], raw, error:error.message, blocked:true };
+      }
+    }
+    function parseBackup(text) {
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) return normalizeDramas(data);
+      if (!data || data.app !== "Drama Tracker" || data.version !== 4) throw new Error("Choose a Drama Tracker v4 backup or a legacy library array.");
+      return normalizeDramas(data.dramas);
+    }
+    function serializeBackup(records) { return JSON.stringify({ app:"Drama Tracker", version:4, exportedAt:new Date().toISOString(), dramas:normalizeDramas(records) },null,2); }
+    function moveInStatus(records,id,direction) {
+      const next = records.slice();
+      const from = next.findIndex(item=>item.id===id);
+      if (from < 0) return next;
+      let to = from + direction;
+      while (to >= 0 && to < next.length && next[to].status !== next[from].status) to += direction;
+      if (to >= 0 && to < next.length) [next[from],next[to]] = [next[to],next[from]];
+      return next;
+    }
+    function escapeHtml(value) { return String(value).replace(/[&<>"']/g, char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char])); }
+  </script>
+  <script id="tracker-ui">
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const storage = { getItem:key=>localStorage.getItem(key), setItem:(key,value)=>localStorage.setItem(key,value) };
+    let library = loadLibrary(storage);
+    let dramas = library.dramas;
+    let lastRaw = library.raw;
+    let activeTab = "watching";
+    let search = "";
+    let sort = "manual";
+    let lastDeleted = null;
+    let restoreCandidate = null;
+    let restoreBaseRaw = null;
+    let editingId = null;
+    let editBaseRaw = null;
+    let draggedId = null;
+    let toastTimer;
+    let theme = "auto";
+    try {
+      const view = JSON.parse(storage.getItem("drama-tracker-v4-view") || "{}");
+      if (Object.hasOwn(STATUS_LABELS,view.tab)) activeTab = view.tab;
+      if (["manual","updated","title","progress"].includes(view.sort)) sort = view.sort;
+      if (["auto","light","dark"].includes(view.theme)) theme = view.theme;
+      if (!library.blocked && lastRaw !== null && storage.getItem("drama-tracker-v4-upgrade-backup") === null) storage.setItem("drama-tracker-v4-upgrade-backup",lastRaw);
+    } catch { /* Preferences are optional; library write failures are reported separately. */ }
+    $("sortSelect").value = sort;
+    applyTheme();
+    showStorageState();
+    render();
+    function showStorageState() {
+      $("recovery").hidden = !library.blocked;
+      $("recoveryMessage").textContent = "Your saved library could not be opened. The original data has been left untouched. Download it for recovery, or restore a valid backup. " + library.error;
+      $("recoveryBackup").hidden = library.raw === null;
+      $("saveStatus").classList.toggle("error",library.blocked);
+      $("saveStatus").textContent = library.blocked ? "Saving unavailable · recovery needed" : "Saved on this device";
+    }
+    function rememberView() { try { storage.setItem("drama-tracker-v4-view",JSON.stringify({tab:activeTab,sort,theme})); } catch { /* Optional view settings. */ } }
+    function applyTheme() {
+      if (theme === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = theme;
+      $("themeButton").textContent = "Theme: " + ({auto:"Auto",light:"Light",dark:"Dark"}[theme]);
+      $("themeButton").setAttribute("aria-label","Color theme: " + theme + ". Click to change");
+      const dark = theme === "dark" || theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches;
+      document.querySelector('meta[name="theme-color"]').content = dark ? "#121820" : "#f6f7fb";
+    }
+    function notify(message) {
+      clearTimeout(toastTimer);
+      $("toast").textContent = message; $("toast").hidden = false;
+      toastTimer = setTimeout(()=>$("toast").hidden=true,5500);
+    }
+    function syncFromStorage(message) {
+      library = loadLibrary(storage); dramas = library.dramas; lastRaw = library.raw;
+      lastDeleted = null; $("undoBar").hidden = true;
+      showStorageState(); render();
+      if (message) notify(message);
+    }
+    function commit(next,{rerender=true,recovery=false}={}) {
+      if (library.blocked && !recovery) { notify("Restore a valid backup before changing this library. Original data is untouched."); return false; }
+      try {
+        const saved = saveLibrary(storage,next,lastRaw);
+        dramas = saved.dramas; lastRaw = saved.raw; library = {...saved,error:"",blocked:false};
+        $("saveStatus").classList.remove("error"); $("saveStatus").textContent = "Saved just now";
+        $("saveStatus").title = new Date().toLocaleString(); $("recovery").hidden = true;
+        if (rerender) render();
+        return true;
+      } catch (error) {
+        if (error.code === "CONFLICT") syncFromStorage(error.message);
+        else { $("saveStatus").classList.add("error"); $("saveStatus").textContent = "Save failed · change not applied"; notify("Could not save. Your change was not applied. " + error.message); }
+        return false;
+      }
+    }
+    function visibleDramas() {
+      let visible = dramas.filter(item=>item.status===activeTab && (item.name+" "+item.notes).toLocaleLowerCase().includes(search));
+      if (sort === "title") visible.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+      if (sort === "updated") visible.sort((a,b)=>Date.parse(b.updatedAt)-Date.parse(a.updatedAt));
+      if (sort === "progress") visible.sort((a,b)=>b.episodes-a.episodes);
+      return visible;
+    }
+    function canReorder() { return sort === "manual" && !search; }
+    function render() {
+      const focused = document.activeElement;
+      const focusAction = focused?.dataset?.action; const focusId = focused?.dataset?.id;
+      for (const status of Object.keys(STATUS_LABELS)) {
+        const count = dramas.filter(item=>item.status===status).length;
+        $(status+"Count").textContent=count; $(status+"TabCount").textContent=count;
+      }
+      $("episodeCount").textContent=dramas.reduce((sum,item)=>sum+item.episodes,0).toLocaleString();
+      document.querySelectorAll("[data-tab]").forEach(button=>{ const active=button.dataset.tab===activeTab; button.classList.toggle("active",active); button.setAttribute("aria-pressed",String(active)); });
+      const visible=visibleDramas();
+      const total=dramas.filter(item=>item.status===activeTab).length;
+      $("resultInfo").textContent=(search ? visible.length+" of "+total : total)+" "+(total===1?"title":"titles")+" · "+(canReorder()?"Use arrows or drag to reorder":"Clear search and choose Your order to reorder");
+      $("clearSearch").hidden=!search;
+      $("libraryInfo").textContent=dramas.length+" titles · Saved in this browser · Back up to move devices";
+      $("dramaList").innerHTML=visible.length ? visible.map((item,index)=>renderDrama(item,index,visible.length)).join("") : '<div class="empty"><strong>'+ (search?"No matching dramas":STATUS_LABELS[activeTab]+" is clear")+'</strong>'+(search?"Try another title or note, or clear your search.":activeTab==="watching"?"Add a drama above and make time for your next episode.":activeTab==="archived"?"Archive a drama while you wait for its next season.":"Move a finished drama here to celebrate another story.")+"</div>";
+      if (focusAction && focusId) {
+        const replacement=Array.from($("dramaList").querySelectorAll("[data-action]")).find(element=>element.dataset.action===focusAction && element.dataset.id===focusId);
+        if (replacement && !replacement.disabled) replacement.focus({preventScroll:true});
+      }
+    }
+    function renderDrama(item,index,count) {
+      const id=escapeHtml(item.id),name=escapeHtml(item.name), reorder=canReorder();
+      const action=(key,label,extra="",className="")=>'<button type="button" class="'+className+'" data-action="'+key+'" data-id="'+id+'" '+extra+'>'+label+'</button>';
+      const moves=Object.keys(STATUS_LABELS).filter(status=>status!==item.status).map(status=>action("move",status==="watching"?"Watch again":status==="archived"?"Archive":"Complete",'data-status="'+status+'" aria-label="Move '+name+' to '+STATUS_LABELS[status]+'"',status==="archived"?"archive":status==="completed"?"complete":"")).join("");
+      const date=new Date(item.updatedAt).getTime()>0 ? new Date(item.updatedAt).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}) : "earlier";
+      const total=item.totalEpisodes;
+      return '<article class="drama '+item.status+'" draggable="'+reorder+'" data-id="'+id+'" aria-label="'+name+'">'+
+        '<div class="order"><span class="index">'+String(index+1).padStart(2,"0")+'</span><div class="order-buttons">'+action("up","↑",'aria-label="Move '+name+' up" '+(!reorder||index===0?'disabled':""))+action("down","↓",'aria-label="Move '+name+' down" '+(!reorder||index===count-1?'disabled':""))+'</div></div>'+
+        '<div class="details"><h2 class="name">'+name+'</h2><div class="row-meta"><span class="badge">'+STATUS_LABELS[item.status]+'</span><span>Updated '+date+'</span></div>'+
+        (item.notes?'<p class="notes">'+escapeHtml(item.notes)+'</p>':"")+(item.url?'<a class="watch-link" href="'+escapeHtml(item.url)+'" target="_blank" rel="noopener noreferrer">Open watch link ↗</a>':"")+
+        '<div class="actions">'+action("edit","Edit",'aria-label="Edit '+name+'"')+moves+action("delete","Delete",'aria-label="Delete '+name+'"',"delete")+'</div></div>'+
+        '<div class="episode-stack"><label class="episode-label" for="episode-'+id+'">Current episode</label><div class="episode-controls">'+action("decrease","−",'aria-label="Decrease episode for '+name+'" '+(item.episodes===0?'disabled':""))+
+        '<input id="episode-'+id+'" type="number" min="0" max="'+(total??MAX_EPISODES)+'" step="1" inputmode="numeric" value="'+item.episodes+'" data-action="episode" data-id="'+id+'" aria-label="Current episode for '+name+'">'+action("increase","+",'aria-label="Increase episode for '+name+'" '+(item.episodes===(total??MAX_EPISODES)?'disabled':""))+'</div>'+
+        '<div class="progress-info">'+(total?'of '+total+' episodes · '+Math.round(item.episodes/total*100)+'%':"Set a total in Edit to track progress")+'</div>'+(total?'<progress max="'+total+'" value="'+item.episodes+'" aria-label="Progress for '+name+'"></progress>':"")+'</div></article>';
+    }
+    $("dramaName").addEventListener("input",()=>$("addButton").disabled=!$("dramaName").value.trim());
+    $("addForm").addEventListener("submit",event=>{
+      event.preventDefault(); const name=$("dramaName").value.trim(); if (!name) return;
+      const duplicate=dramas.find(item=>item.name.toLocaleLowerCase()===name.toLocaleLowerCase());
+      if (duplicate) { activeTab=duplicate.status; search=""; $("searchInput").value=""; render(); rememberView(); notify("That title is already in "+STATUS_LABELS[duplicate.status]+". Use Edit for another season name."); return; }
+      const next=[{id:createId(),name,episodes:0,status:"watching",updatedAt:new Date().toISOString()},...dramas];
+      const previous=activeTab; activeTab="watching";
+      if (commit(next)) { $("dramaName").value=""; $("addButton").disabled=true; search=""; $("searchInput").value=""; rememberView(); render(); notify("Added "+name); } else { activeTab=previous; render(); }
+    });
+    document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener("click",()=>{activeTab=button.dataset.tab; rememberView(); render();}));
+    document.querySelector(".tabs").addEventListener("keydown",event=>{
+      if (!["ArrowLeft","ArrowRight","Home","End"].includes(event.key)) return;
+      const buttons=Array.from(document.querySelectorAll("[data-tab]")); const current=buttons.indexOf(event.target); if(current<0)return;
+      event.preventDefault(); const next=event.key==="Home"?0:event.key==="End"?2:(current+(event.key==="ArrowRight"?1:2))%3; buttons[next].click(); buttons[next].focus();
+    });
+    $("searchInput").addEventListener("input",()=>{search=$("searchInput").value.trim().toLocaleLowerCase();render();});
+    $("clearSearch").addEventListener("click",()=>{search="";$("searchInput").value="";render();$("searchInput").focus();});
+    $("sortSelect").addEventListener("change",()=>{sort=$("sortSelect").value;rememberView();render();});
+    $("themeButton").addEventListener("click",()=>{theme=({auto:"light",light:"dark",dark:"auto"})[theme];applyTheme();rememberView();});
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme);
+    $("dramaList").addEventListener("click",event=>{
+      const button=event.target.closest("button[data-action]"); if(!button)return;
+      const item=dramas.find(record=>record.id===button.dataset.id); if(!item)return;
+      const action=button.dataset.action;
+      if(action==="edit") { openEditor(item); return; }
+      if(action==="delete") {
+        const index=dramas.indexOf(item);
+        if(commit(dramas.filter(record=>record.id!==item.id))) { lastDeleted={item,index}; $("undoText").textContent="Deleted “"+item.name+"”.";$("undoBar").hidden=false;$("undoButton").focus({preventScroll:true}); }
+        return;
+      }
+      if(action==="up" || action==="down") { if(canReorder() && commit(moveInStatus(dramas,item.id,action==="up"?-1:1)))notify("Order saved");return; }
+      let updated={...item,updatedAt:new Date().toISOString()};
+      if(action==="increase")updated.episodes=Math.min(item.totalEpisodes??MAX_EPISODES,item.episodes+1);
+      if(action==="decrease")updated.episodes=Math.max(0,item.episodes-1);
+      if(action==="move")updated.status=button.dataset.status;
+      if(commit(dramas.map(record=>record.id===item.id?updated:record))) { if(action==="move")notify("Moved “"+item.name+"” to "+STATUS_LABELS[updated.status]); }
+    });
+    function saveEpisode(input) {
+      const item=dramas.find(record=>record.id===input.dataset.id); if(!item)return false;
+      let episodes;
+      try { episodes=episodeNumber(input.value); if(item.totalEpisodes!==null && episodes>item.totalEpisodes)throw new Error("Current episode cannot exceed total episodes. Change the total in Edit."); } catch(error) { notify(error.message);return false; }
+      if(episodes===item.episodes)return true;
+      const updated={...item,episodes,updatedAt:new Date().toISOString()};
+      if(!commit(dramas.map(record=>record.id===item.id?updated:record),{rerender:false}))return false;
+      // Keep the input and surrounding buttons in place while typing or tapping another action.
+      const row=input.closest(".drama");
+      row.querySelector('[data-action="decrease"]').disabled=episodes===0;
+      row.querySelector('[data-action="increase"]').disabled=episodes===(item.totalEpisodes??MAX_EPISODES);
+      row.querySelector(".progress-info").textContent=item.totalEpisodes?"of "+item.totalEpisodes+" episodes · "+Math.round(episodes/item.totalEpisodes*100)+"%":"Set a total in Edit to track progress";
+      if(row.querySelector("progress"))row.querySelector("progress").value=episodes;
+      row.querySelector(".row-meta span:last-child").textContent="Updated "+new Date(updated.updatedAt).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+      $("episodeCount").textContent=dramas.reduce((sum,record)=>sum+record.episodes,0).toLocaleString();
+      return true;
+    }
+    $("dramaList").addEventListener("input",event=>{const input=event.target.closest('input[data-action="episode"]');if(input && input.value!=="" && input.validity.valid)saveEpisode(input);});
+    $("dramaList").addEventListener("change",event=>{const input=event.target.closest('input[data-action="episode"]');if(input && !saveEpisode(input)){const item=dramas.find(record=>record.id===input.dataset.id);if(item)input.value=item.episodes;}});
+    $("dramaList").addEventListener("keydown",event=>{if(event.key==="Enter" && event.target.matches('input[data-action="episode"]')){event.preventDefault();event.target.blur();render();}});
+    $("dramaList").addEventListener("focusout",event=>{if(event.target.matches('input[data-action="episode"]') && event.relatedTarget && !$("dramaList").contains(event.relatedTarget))render();});
+    $("undoButton").addEventListener("click",()=>{
+      if(!lastDeleted)return;
+      if(dramas.some(item=>item.id===lastDeleted.item.id || item.name.toLocaleLowerCase()===lastDeleted.item.name.toLocaleLowerCase())){notify("A drama with this title already exists. Rename it before undoing this deletion.");return;}
+      const next=dramas.slice();next.splice(Math.min(lastDeleted.index,next.length),0,lastDeleted.item);
+      if(commit(next)){lastDeleted=null;$("undoBar").hidden=true;$("dramaList").focus({preventScroll:true});notify("Drama restored");}
+    });
+    function openEditor(item) {
+      editingId=item.id;editBaseRaw=lastRaw;
+      $("editName").value=item.name;$("editEpisodes").value=item.episodes;$("editTotal").value=item.totalEpisodes??"";$("editStatus").value=item.status;$("editNotes").value=item.notes;$("editUrl").value=item.url;$("editError").hidden=true;$("editDialog").showModal();
+    }
+    $("editForm").addEventListener("submit",event=>{
+      event.preventDefault();
+      try {
+        if(editBaseRaw!==lastRaw)throw new Error("The library changed while you were editing. Close and reopen this editor to use the latest version.");
+        const item=dramas.find(record=>record.id===editingId);if(!item)throw new Error("This drama no longer exists.");
+        const updated=normalizeDramas([{...item,name:$("editName").value,episodes:$("editEpisodes").value,totalEpisodes:$("editTotal").value,status:$("editStatus").value,notes:$("editNotes").value,url:$("editUrl").value.trim(),updatedAt:new Date().toISOString()}])[0];
+        if(dramas.some(record=>record.id!==item.id && record.name.toLocaleLowerCase()===updated.name.toLocaleLowerCase()))throw new Error("Another drama already has that title. Use a season number to distinguish it.");
+        if(commit(dramas.map(record=>record.id===item.id?updated:record))){$("editDialog").close();notify("Changes saved");}
+      }catch(error){$("editError").textContent=error.message;$("editError").hidden=false;}
+    });
+    function download(text,filename,type="application/json") {
+      const url=URL.createObjectURL(new Blob([text],{type}));const link=document.createElement("a");link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+    }
+    function backup() {
+      if(library.blocked){if(library.raw!==null)download(library.raw,"drama-tracker-original-data.txt","text/plain");else notify("No saved data is available to download.");return;}
+      download(serializeBackup(dramas),"drama-tracker-v4-"+new Date().toISOString().slice(0,10)+".json");notify("Backup download started. Keep it in Files or iCloud Drive.");
+    }
+    $("backupButton").addEventListener("click",backup);$("restoreBackupButton").addEventListener("click",backup);$("recoveryBackup").addEventListener("click",backup);
+    $("restoreButton").addEventListener("click",()=>$("restoreFile").click());
+    $("restoreFile").addEventListener("change",async()=>{
+      const file=$("restoreFile").files[0];if(!file)return;
+      try{
+        if(file.size>5*1024*1024)throw new Error("Choose a backup smaller than 5 MB.");
+        restoreCandidate=parseBackup(await file.text());restoreBaseRaw=lastRaw;
+        $("restorePreview").textContent=restoreCandidate.length+" titles in “"+file.name+"”. Your current "+dramas.length+" titles will be replaced, including their order and progress.";
+        $("restoreError").hidden=true;$("restoreDialog").showModal();
+      }catch(error){restoreCandidate=null;notify("Backup was not imported. "+error.message);}finally{$("restoreFile").value="";}
+    });
+    $("confirmRestore").addEventListener("click",()=>{
+      if(!restoreCandidate)return;
+      if(restoreBaseRaw!==lastRaw){$("restoreError").textContent="The library changed after you selected this backup. Cancel and select it again.";$("restoreError").hidden=false;return;}
+      if(commit(restoreCandidate,{recovery:true})){restoreCandidate=null;lastDeleted=null;$("undoBar").hidden=true;search="";$("searchInput").value="";activeTab="watching";rememberView();render();$("restoreDialog").close();notify("Backup restored and saved");}
+    });
+    document.querySelectorAll("[data-close]").forEach(button=>button.addEventListener("click",()=>$(button.dataset.close).close()));
+    $("restoreDialog").addEventListener("close",()=>restoreCandidate=null);
+    $("helpButton").addEventListener("click",()=>$("helpDialog").showModal());
+    $("dramaList").addEventListener("dragstart",event=>{
+      const row=event.target.closest(".drama");if(!row||!canReorder()||event.target.closest("input,button,a")){event.preventDefault();return;}
+      draggedId=row.dataset.id;row.classList.add("dragging");event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",draggedId);
+    });
+    $("dramaList").addEventListener("dragover",event=>{const row=event.target.closest(".drama");if(row&&draggedId&&row.dataset.id!==draggedId){event.preventDefault();row.classList.add("drag-over");}});
+    $("dramaList").addEventListener("dragleave",event=>{const row=event.target.closest(".drama");if(row&&!row.contains(event.relatedTarget))row.classList.remove("drag-over");});
+    $("dramaList").addEventListener("drop",event=>{
+      event.preventDefault();const row=event.target.closest(".drama");if(!row||!draggedId||!canReorder())return;
+      const next=dramas.slice(),from=next.findIndex(item=>item.id===draggedId),to=next.findIndex(item=>item.id===row.dataset.id);
+      if(from>=0&&to>=0&&from!==to){const [moved]=next.splice(from,1);next.splice(to,0,moved);if(commit(next))notify("Order saved");}draggedId=null;
+    });
+    $("dramaList").addEventListener("dragend",()=>{draggedId=null;document.querySelectorAll(".dragging,.drag-over").forEach(row=>row.classList.remove("dragging","drag-over"));});
+    window.addEventListener("storage",event=>{if(event.key===STORAGE_KEY||event.key===null)syncFromStorage("Library updated from another tab");});
+    window.addEventListener("pageshow",event=>{if(event.persisted){try{if(storage.getItem(STORAGE_KEY)!==lastRaw)syncFromStorage("Library refreshed");}catch{syncFromStorage();}}});
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){try{if(storage.getItem(STORAGE_KEY)!==lastRaw)syncFromStorage("Library refreshed");}catch{syncFromStorage();}}});
+  </script>
+</body>
+</html>
